@@ -7,6 +7,7 @@ import type { Profile } from '@/lib/types'
 const NAV = [
   { href: '/dashboard', label: 'Inicio', emoji: '🏠' },
   { href: '/matches', label: 'Partidos', emoji: '⚽' },
+  { href: '/fixture', label: 'Fixture', emoji: '🗓️' },
   { href: '/ranking', label: 'Ranking', emoji: '🏅' },
   { href: '/profile', label: 'Perfil', emoji: '👤' },
 ]
