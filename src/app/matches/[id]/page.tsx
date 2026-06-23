@@ -95,7 +95,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
         <div style={{ marginBottom: '24px' }}>
           <h2 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '12px' }}>🎯 Tu Predicción</h2>
           {canPredict ? (
-            <PredictionForm matchId={match.id} homeTeam={match.home_team} awayTeam={match.away_team} existingPrediction={prediction} />
+            <PredictionForm matchId={match.id} homeTeam={match.home_team} awayTeam={match.away_team} homeFlag={match.home_team_flag} awayFlag={match.away_team_flag} existingPrediction={prediction} />
           ) : prediction ? (
             <div style={{
               background: '#12121a', border: '1px solid',
