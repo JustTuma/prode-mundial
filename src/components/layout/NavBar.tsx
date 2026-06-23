@@ -8,7 +8,6 @@ const NAV = [
   { href: '/dashboard', label: 'Inicio', emoji: '🏠' },
   { href: '/matches', label: 'Partidos', emoji: '⚽' },
   { href: '/ranking', label: 'Ranking', emoji: '🏅' },
-  { href: '/leagues', label: 'Ligas', emoji: '👥' },
   { href: '/profile', label: 'Perfil', emoji: '👤' },
 ]
 
@@ -45,8 +44,12 @@ export default function NavBar({ profile }: { profile: Profile | null }) {
                 background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 color: 'white', fontWeight: 700, fontSize: '14px',
+                overflow: 'hidden', border: '2px solid #2a2a3e',
               }}>
-                {profile.username?.[0]?.toUpperCase() || '?'}
+                {profile.avatar_url
+                  ? <img src={profile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  : profile.username?.[0]?.toUpperCase() || '?'
+                }
               </div>
               <div style={{ display: 'none' }} className="md-show">
                 <div style={{ color: '#f0f0f5', fontSize: '14px', fontWeight: 600 }}>{profile.username}</div>

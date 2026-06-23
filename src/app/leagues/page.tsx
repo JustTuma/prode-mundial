@@ -41,8 +41,6 @@ export default async function LeaguesPage() {
                 background: '#12121a', border: '1px solid #1e1e2e', borderRadius: '12px',
                 padding: '20px', cursor: 'pointer', transition: 'all 0.15s',
               }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = '#3b82f6'; e.currentTarget.style.transform = 'translateY(-2px)' }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = '#1e1e2e'; e.currentTarget.style.transform = '' }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>

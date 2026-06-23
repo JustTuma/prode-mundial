@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 
-export const revalidate = 60
+export const revalidate = 0
 
 export default async function RankingPage() {
   const supabase = await createClient()
@@ -65,8 +65,12 @@ export default async function RankingPage() {
                   background: `linear-gradient(135deg, ${colors[i]}, ${colors[i]}88)`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   color: '#000', fontWeight: 800, fontSize: '16px',
+                  overflow: 'hidden', border: `2px solid ${colors[i]}`,
                 }}>
-                  {p.username?.[0]?.toUpperCase()}
+                  {p.avatar_url
+                    ? <img src={p.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    : p.username?.[0]?.toUpperCase()
+                  }
                 </div>
                 <div style={{ fontWeight: 700, fontSize: '13px', color: '#f0f0f5', marginBottom: '4px' }}>{p.username}</div>
                 <div style={{ color: colors[i], fontWeight: 900, fontSize: '1.2rem' }}>{p.total_points}</div>
@@ -115,8 +119,12 @@ export default async function RankingPage() {
                     background: `linear-gradient(135deg, #3b82f6, #8b5cf6)`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     color: 'white', fontWeight: 700, fontSize: '13px',
+                    overflow: 'hidden',
                   }}>
-                    {p.username?.[0]?.toUpperCase()}
+                    {p.avatar_url
+                      ? <img src={p.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      : p.username?.[0]?.toUpperCase()
+                    }
                   </div>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontWeight: isUser ? 700 : 500, color: isUser ? '#f0f0f5' : '#94a3b8', fontSize: '14px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

@@ -45,8 +45,12 @@ export default async function ProfilePage() {
           background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           color: 'white', fontWeight: 900, fontSize: '32px',
+          overflow: 'hidden', border: '3px solid #2a2a3e',
         }}>
-          {profile?.username?.[0]?.toUpperCase()}
+          {profile?.avatar_url
+            ? <img src={profile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            : profile?.username?.[0]?.toUpperCase()
+          }
         </div>
         <h1 style={{ margin: '0 0 4px', fontSize: '1.5rem', fontWeight: 800 }}>{profile?.username}</h1>
         <p style={{ color: '#6b7280', margin: 0, fontSize: '14px' }}>

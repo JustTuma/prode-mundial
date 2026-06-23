@@ -92,6 +92,10 @@ body {
 }
 .score-input:focus { border-color: #3b82f6; }
 
+.card-hover { transition: border-color 0.2s, transform 0.15s; }
+.card-hover:hover { border-color: #3b82f6 !important; }
+.card-hover-lift:hover { border-color: #3b82f6 !important; transform: translateY(-2px); }
+
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }

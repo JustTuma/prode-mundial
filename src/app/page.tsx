@@ -76,6 +76,9 @@ export default async function Home() {
           </Link>
         </div>
         <p style={{ color: '#374151', fontSize: '12px', marginTop: '24px' }}>Gratis · Sin publicidad · Hecho por fans del fútbol 🇦🇷</p>
+        <p style={{ color: '#374151', fontSize: '11px', marginTop: '6px' }}>
+          Programado con ❤️ por <span style={{ color: '#6b7280', fontWeight: 600 }}>Matias Tuma</span>
+        </p>
       </div>
     </main>
   )
