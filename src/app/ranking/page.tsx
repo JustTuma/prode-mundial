@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import Link from 'next/link'
 
 export const revalidate = 0
 
@@ -128,7 +129,7 @@ export default async function RankingPage() {
                   </div>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontWeight: isUser ? 700 : 500, color: isUser ? '#f0f0f5' : '#94a3b8', fontSize: '14px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {p.username} {isUser && <span style={{ color: '#3b82f6', fontSize: '11px' }}>(vos)</span>}
+                      <Link href={`/profile/${p.username}`} style={{ textDecoration: 'none', color: 'inherit' }}>{p.username}</Link> {isUser && <span style={{ color: '#3b82f6', fontSize: '11px' }}>(vos)</span>}
                     </div>
                     {p.predictions_made > 0 && (
                       <div style={{ color: '#374151', fontSize: '11px' }}>{p.predictions_made} predicciones</div>
