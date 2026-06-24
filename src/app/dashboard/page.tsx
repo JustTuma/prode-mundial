@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { formatDate } from '@/lib/utils'
 import DashboardClient from '@/components/dashboard/DashboardClient'
+import PointsToast from '@/components/dashboard/PointsToast'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -25,13 +26,18 @@ export default async function DashboardPage() {
     ? Math.round((profile.correct_results / profile.predictions_made) * 100) : 0
 
   return (
-    <DashboardClient
-      profile={profile}
-      upcomingMatches={upcomingMatches}
-      recentPredictions={recentPredictions}
-      liveMatches={liveMatches}
-      rank={rank}
-      accuracy={accuracy}
-    />
+    <>
+      {user && profile && (
+        <PointsToast totalPoints={profile.total_points || 0} userId={user.id} />
+      )}
+      <DashboardClient
+        profile={profile}
+        upcomingMatches={upcomingMatches}
+        recentPredictions={recentPredictions}
+        liveMatches={liveMatches}
+        rank={rank}
+        accuracy={accuracy}
+      />
+    </>
   )
 }
