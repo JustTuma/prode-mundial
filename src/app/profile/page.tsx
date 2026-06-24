@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import EditProfileForm from '@/components/profile/EditProfileForm'
+import { InstallGuideSection } from '@/components/InstallGuide'
 import Link from 'next/link'
 
 export default async function ProfilePage() {
@@ -126,6 +127,10 @@ export default async function ProfilePage() {
         <Link href="/predict/bonus">
           <button className="btn-gold" style={{ width: '100%' }}>🌟 Ver mis predicciones bonus</button>
         </Link>
+      </div>
+
+      <div style={{ marginTop: '16px' }}>
+        <InstallGuideSection />
       </div>
     </div>
   )

@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { formatDate } from '@/lib/utils'
 import DashboardClient from '@/components/dashboard/DashboardClient'
+import { InstallModal } from '@/components/InstallGuide'
 import PointsToast from '@/components/dashboard/PointsToast'
 
 export default async function DashboardPage() {
@@ -27,6 +28,7 @@ export default async function DashboardPage() {
 
   return (
     <>
+      <InstallModal />
       {user && profile && (
         <PointsToast totalPoints={profile.total_points || 0} userId={user.id} />
       )}
