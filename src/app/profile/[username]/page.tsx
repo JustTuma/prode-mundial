@@ -16,18 +16,27 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
   const rank = (rankRes.data || []).findIndex(p => p.id === profile.id) + 1
   const isMe = me?.id === profile.id
 
-  const [predsRes, achievementsRes] = await Promise.all([
+  const [predsRes, achievementsRes, myPredsRes, myProfileRes] = await Promise.all([
     supabase.from('predictions')
       .select('*, matches(*)')
       .eq('user_id', profile.id)
       .order('created_at', { ascending: false }),
     supabase.from('user_achievements').select('achievement_id').eq('user_id', profile.id),
+    me && me.id !== profile.id
+      ? supabase.from('predictions').select('match_id, home_score_pred, away_score_pred, is_exact, is_correct_result, points_earned').eq('user_id', me.id)
+      : { data: [] },
+    me && me.id !== profile.id
+      ? supabase.from('profiles').select('*').eq('id', me.id).single()
+      : { data: null },
   ])
 
   const predictions = predsRes.data || []
   const earnedIds = new Set((achievementsRes.data || []).map(a => a.achievement_id))
   const accuracy = profile.predictions_made > 0
     ? Math.round((profile.correct_results / profile.predictions_made) * 100) : 0
+  const myPreds = new Map((myPredsRes.data || []).map((p: any) => [p.match_id, p]))
+  const myProfile = myProfileRes.data
+  const myRank = myProfile ? (rankRes.data || []).findIndex((p: any) => p.id === me?.id) + 1 : 0
 
   const allAchievements = [
     { id: 'first_pred', name: 'Primera Predicción', emoji: '🎯' },
@@ -112,6 +121,74 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
                 <span style={{ color: '#f0f0f5', fontSize: '12px', fontWeight: 600 }}>{a.name}</span>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* COMPARADOR */}
+      {myProfile && !isMe && (
+        <div style={{ background: '#12121a', border: '1px solid #1e1e2e', borderRadius: '14px', padding: '18px', marginBottom: '20px' }}>
+          <h2 style={{ fontSize: '13px', fontWeight: 700, color: '#94a3b8', margin: '0 0 16px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            ⚔️ Vos vs {profile.username}
+          </h2>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: '12px', alignItems: 'center' }}>
+            {/* Yo */}
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ width: '44px', height: '44px', borderRadius: '50%', margin: '0 auto 6px', overflow: 'hidden', background: 'linear-gradient(135deg,#003087,#0050c8)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {myProfile.avatar_url
+                  ? <img src={myProfile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  : <span style={{ color: '#fff', fontWeight: 700 }}>{myProfile.username?.[0]?.toUpperCase()}</span>
+                }
+              </div>
+              <div style={{ fontWeight: 700, fontSize: '13px', color: '#f0f0f5' }}>{myProfile.username}</div>
+              <div style={{ color: '#6b7280', fontSize: '11px' }}>#{myRank}</div>
+            </div>
+
+            {/* Stats */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {[
+                { label: 'Puntos', mine: myProfile.total_points, theirs: profile.total_points },
+                { label: 'Exactos', mine: myProfile.exact_scores, theirs: profile.exact_scores },
+                { label: 'Correctos', mine: myProfile.correct_results, theirs: profile.correct_results },
+              ].map(s => {
+                const iWin = s.mine > s.theirs
+                const theyWin = s.theirs > s.mine
+                return (
+                  <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ fontWeight: 900, fontSize: '15px', color: iWin ? '#10b981' : theyWin ? '#6b7280' : '#f0f0f5', minWidth: '28px', textAlign: 'right' }}>{s.mine}</span>
+                    <span style={{ color: '#374151', fontSize: '10px', textAlign: 'center', minWidth: '48px' }}>{s.label}</span>
+                    <span style={{ fontWeight: 900, fontSize: '15px', color: theyWin ? '#ef4444' : iWin ? '#6b7280' : '#f0f0f5', minWidth: '28px' }}>{s.theirs}</span>
+                  </div>
+                )
+              })}
+              {(() => {
+                const commonMatches = predictions.filter(p => myPreds.has(p.match_id) && p.matches?.status === 'FINISHED')
+                const agreed = commonMatches.filter(p => {
+                  const mine = myPreds.get(p.match_id)
+                  return mine && mine.home_score_pred === p.home_score_pred && mine.away_score_pred === p.away_score_pred
+                }).length
+                if (commonMatches.length === 0) return null
+                return (
+                  <div style={{ borderTop: '1px solid #1e1e2e', paddingTop: '8px', textAlign: 'center' }}>
+                    <span style={{ color: '#6b7280', fontSize: '11px' }}>
+                      Coincidieron en {agreed} de {commonMatches.length} partidos
+                    </span>
+                  </div>
+                )
+              })()}
+            </div>
+
+            {/* Ellos */}
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ width: '44px', height: '44px', borderRadius: '50%', margin: '0 auto 6px', overflow: 'hidden', background: 'linear-gradient(135deg,#7c3aed,#a855f7)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {profile.avatar_url
+                  ? <img src={profile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  : <span style={{ color: '#fff', fontWeight: 700 }}>{profile.username?.[0]?.toUpperCase()}</span>
+                }
+              </div>
+              <div style={{ fontWeight: 700, fontSize: '13px', color: '#f0f0f5' }}>{profile.username}</div>
+              <div style={{ color: '#6b7280', fontSize: '11px' }}>#{rank}</div>
+            </div>
           </div>
         </div>
       )}
