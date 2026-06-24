@@ -31,6 +31,13 @@ export default async function DashboardPage() {
   const liveMatches = liveRes.data || []
   const wallPosts = wallRes.data || []
 
+  // ¿Ya pronosticó el próximo partido?
+  let nextPredicted = false
+  if (nextMatch) {
+    const { data: np } = await supabase.from('predictions').select('id').eq('user_id', user.id).eq('match_id', nextMatch.id).maybeSingle()
+    nextPredicted = !!np
+  }
+
   // Real points from predictions
   const totals: Record<string, { points: number; exact: number }> = {}
   for (const p of (predsRes.data || [])) {
@@ -70,6 +77,7 @@ export default async function DashboardPage() {
       <DashboardClient
         profile={profile}
         nextMatch={nextMatch}
+        nextPredicted={nextPredicted}
         liveMatches={liveMatches}
         rank={rank}
         myPoints={myPoints}

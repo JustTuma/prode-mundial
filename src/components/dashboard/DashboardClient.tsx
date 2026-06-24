@@ -7,6 +7,7 @@ import { personColor } from '@/lib/teams'
 interface Props {
   profile: any
   nextMatch: any
+  nextPredicted?: boolean
   liveMatches: any[]
   rank: number
   myPoints: number
@@ -47,7 +48,7 @@ function timeAgo(dateStr: string) {
   return `hace ${Math.floor(h / 24)}d`
 }
 
-export default function DashboardClient({ profile, nextMatch, liveMatches, rank, myPoints, myExact, pointsToLeader, top4, wallPosts, weeklyWinner, userId }: Props) {
+export default function DashboardClient({ profile, nextMatch, nextPredicted, liveMatches, rank, myPoints, myExact, pointsToLeader, top4, wallPosts, weeklyWinner, userId }: Props) {
   const cd = useCountdown(nextMatch?.match_date)
   const progress = rank === 1 ? 100 : Math.max(8, Math.min(95, Math.round((myPoints / (myPoints + pointsToLeader || 1)) * 100)))
 
@@ -121,7 +122,7 @@ export default function DashboardClient({ profile, nextMatch, liveMatches, rank,
           </div>
           <div className="font-display" style={{ marginTop: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', background: 'var(--surface2)', borderRadius: '14px', padding: '11px', fontSize: '21px', color: 'var(--ink)', letterSpacing: '1px' }}>{cd}</div>
           <Link href={`/matches/${nextMatch.id}`} style={{ textDecoration: 'none' }}>
-            <button className="btn-accent" style={{ marginTop: '12px' }}>Cargar mi pronóstico</button>
+            <button className="btn-accent" style={{ marginTop: "12px", background: nextPredicted ? "var(--pos)" : "var(--accent)" }}>{nextPredicted ? "✓ Pronóstico cargado · editar" : "Cargar mi pronóstico"}</button>
           </Link>
         </div>
       )}

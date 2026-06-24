@@ -76,19 +76,6 @@ export default function ProfileView({ profile, rank, myPoints, myExact, earnedId
         ))}
       </div>
 
-      {/* Premios */}
-      <div style={{ marginTop: '16px', borderRadius: '20px', padding: '18px', background: 'var(--grad)', color: '#fff', boxShadow: 'var(--shadow)', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', right: '-20px', top: '-20px', width: '110px', height: '110px', borderRadius: '50%', background: 'rgba(255,255,255,.12)' }} />
-        <div style={{ position: 'relative' }}>
-          <div style={{ fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.7px', opacity: .9 }}>Premio del grupo</div>
-          <div className="font-display" style={{ fontSize: '34px', marginTop: '2px' }}>🍔 La hamburguesa</div>
-          <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px', fontWeight: 700 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Ganador de la semana</span><span className="font-display">🥇</span></div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', opacity: .85, borderTop: '1px solid rgba(255,255,255,.25)', paddingTop: '8px' }}><span>Último del torneo</span><span>organiza el asado</span></div>
-          </div>
-        </div>
-      </div>
-
       {/* Logros */}
       <h2 className="font-display" style={{ fontSize: '19px', color: 'var(--ink)', margin: '20px 0 12px' }}>Logros</h2>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '12px' }}>
