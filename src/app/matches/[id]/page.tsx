@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { formatDate } from '@/lib/utils'
+import { formatDate, matchLabel } from '@/lib/utils'
 import PredictionForm from '@/components/predictions/PredictionForm'
 import TeamAvatar from '@/components/ui/TeamAvatar'
 import { notFound } from 'next/navigation'
@@ -30,7 +30,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
       <div className="card" style={{ padding: '24px', marginBottom: '20px', position: 'relative', overflow: 'hidden', borderColor: isLive ? 'var(--neg)' : 'var(--line)' }}>
         {isLive && <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: 'linear-gradient(90deg, var(--neg), var(--accent2))' }} />}
         <div style={{ textAlign: 'center', marginBottom: '12px' }}>
-          <span style={{ color: 'var(--muted)', fontSize: '12px', fontWeight: 700 }}>{match.group_name || match.stage} · {formatDate(match.match_date)}</span>
+          <span style={{ color: 'var(--muted)', fontSize: '12px', fontWeight: 700 }}>{matchLabel(match.group_name, match.stage)} · {formatDate(match.match_date)}</span>
         </div>
         {isLive && (
           <div style={{ textAlign: 'center', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>

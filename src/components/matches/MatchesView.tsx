@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import TeamAvatar from '@/components/ui/TeamAvatar'
+import { matchLabel } from '@/lib/utils'
 import type { Match, Prediction } from '@/lib/types'
 
 type Filter = 'proximos' | 'jugados'
@@ -45,7 +46,7 @@ function PredictorCard({ match, pred, userId, onSaved }: { match: Match; pred: P
   return (
     <div className="card" style={{ padding: '16px', marginBottom: '14px' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ fontSize: '10px', fontWeight: 800, color: 'var(--accent)', background: 'var(--surface2)', padding: '4px 9px', borderRadius: '999px', letterSpacing: '.4px' }}>{match.group_name || match.stage}</span>
+        <span style={{ fontSize: '10px', fontWeight: 800, color: 'var(--accent)', background: 'var(--surface2)', padding: '4px 9px', borderRadius: '999px', letterSpacing: '.4px' }}>{matchLabel(match.group_name, match.stage)}</span>
         <span style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: 700 }}>{fmtDate(match.match_date)} · {fmtTime(match.match_date)} hs</span>
       </div>
 

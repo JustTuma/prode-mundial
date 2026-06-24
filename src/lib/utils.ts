@@ -51,13 +51,25 @@ export function calculatePoints(
 export function getStageLabel(stage: string): string {
   const labels: Record<string, string> = {
     GROUP_STAGE: 'Fase de Grupos',
+    LAST_32: 'Ronda de 32',
     ROUND_OF_16: 'Octavos de Final',
+    LAST_16: 'Octavos de Final',
     QUARTER_FINALS: 'Cuartos de Final',
     SEMI_FINALS: 'Semifinales',
     THIRD_PLACE: 'Tercer Puesto',
     FINAL: 'Final',
   }
   return labels[stage] || stage
+}
+
+/** Etiqueta linda para grupo o etapa (ej: "GROUP_B" -> "Grupo B") */
+export function matchLabel(groupName: string | null, stage: string): string {
+  if (groupName) {
+    const m = groupName.match(/group[_\s-]*([a-l])/i)
+    if (m) return `Grupo ${m[1].toUpperCase()}`
+    return groupName
+  }
+  return getStageLabel(stage)
 }
 
 export function getCountryFlag(code: string): string {
