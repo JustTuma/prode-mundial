@@ -56,26 +56,26 @@ export default async function RankingPage() {
             return (
               <div key={p.id} style={{
                 background: '#12121a', border: `1px solid ${colors[i]}44`,
-                borderRadius: '12px', padding: '16px', textAlign: 'center',
-                alignSelf: 'flex-end',
-                height: heights[i],
+                borderRadius: '12px', padding: '10px 6px', textAlign: 'center',
+                alignSelf: 'flex-end', overflow: 'hidden',
+                height: heights[i], minWidth: 0,
               }}>
-                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{emojis[i]}</div>
+                <div style={{ fontSize: '22px', marginBottom: '4px' }}>{emojis[i]}</div>
                 <div style={{
-                  width: '40px', height: '40px', borderRadius: '50%', margin: '0 auto 8px',
+                  width: '36px', height: '36px', borderRadius: '50%', margin: '0 auto 6px',
                   background: `linear-gradient(135deg, ${colors[i]}, ${colors[i]}88)`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: '#000', fontWeight: 800, fontSize: '16px',
-                  overflow: 'hidden', border: `2px solid ${colors[i]}`,
+                  color: '#000', fontWeight: 800, fontSize: '14px',
+                  overflow: 'hidden', border: `2px solid ${colors[i]}`, flexShrink: 0,
                 }}>
                   {p.avatar_url
                     ? <img src={p.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     : p.username?.[0]?.toUpperCase()
                   }
                 </div>
-                <div style={{ fontWeight: 700, fontSize: '13px', color: '#f0f0f5', marginBottom: '4px' }}>{p.username}</div>
-                <div style={{ color: colors[i], fontWeight: 900, fontSize: '1.2rem' }}>{p.total_points}</div>
-                <div style={{ color: '#6b7280', fontSize: '11px' }}>pts</div>
+                <div style={{ fontWeight: 700, fontSize: '11px', color: '#f0f0f5', marginBottom: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', padding: '0 4px' }}>{p.username}</div>
+                <div style={{ color: colors[i], fontWeight: 900, fontSize: '1rem' }}>{p.total_points}</div>
+                <div style={{ color: '#6b7280', fontSize: '10px' }}>pts</div>
               </div>
             )
           })}
