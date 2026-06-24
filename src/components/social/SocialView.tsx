@@ -228,7 +228,7 @@ export default function SocialView({ feedItems, wallPosts: initialPosts, userId 
     setPosting(true)
     const { data, error } = await supabase.from('wall_posts')
       .insert({ user_id: userId, content: text.trim() })
-      .select('*, profiles(id, username, avatar_url), wall_reactions(emoji, user_id)')
+      .select('*, profiles!wall_posts_user_id_fkey(id, username, avatar_url), wall_reactions(emoji, user_id)')
       .single()
     if (error) {
       console.error('Error posting:', error)
