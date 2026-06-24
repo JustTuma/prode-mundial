@@ -10,6 +10,56 @@ interface Props {
   liveMatches: any[]
   rank: number
   accuracy: number
+  weeklyWinner?: { id: string; username: string; avatar_url: string | null; points: number } | null
+}
+
+// Countdown al próximo domingo 23:59
+function WeeklyCountdown() {
+  const [timeLeft, setTimeLeft] = useState({ d: 0, h: 0, m: 0, s: 0 })
+  const [isOver, setIsOver] = useState(false)
+
+  useEffect(() => {
+    const calc = () => {
+      const now = new Date()
+      const sunday = new Date(now)
+      const dayOfWeek = now.getDay()
+      const daysUntilSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek
+      sunday.setDate(now.getDate() + daysUntilSunday)
+      sunday.setHours(23, 59, 59, 0)
+      const diff = sunday.getTime() - now.getTime()
+      if (diff <= 0) { setIsOver(true); return }
+      setTimeLeft({
+        d: Math.floor(diff / 86400000),
+        h: Math.floor((diff % 86400000) / 3600000),
+        m: Math.floor((diff % 3600000) / 60000),
+        s: Math.floor((diff % 60000) / 1000),
+      })
+    }
+    calc()
+    const t = setInterval(calc, 1000)
+    return () => clearInterval(t)
+  }, [])
+
+  const pad = (n: number) => String(n).padStart(2, '0')
+
+  if (isOver) return <span style={{ color: '#10b981', fontWeight: 700, fontSize: '13px' }}>¡Terminó esta semana!</span>
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+      {timeLeft.d > 0 && (
+        <>
+          <span style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '6px', padding: '2px 6px', fontWeight: 900, fontSize: '13px', color: '#fff', fontVariantNumeric: 'tabular-nums' }}>{timeLeft.d}d</span>
+          <span style={{ color: 'rgba(255,255,255,0.4)' }}>:</span>
+        </>
+      )}
+      {[timeLeft.h, timeLeft.m, timeLeft.s].map((v, i) => (
+        <span key={i} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <span style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '6px', padding: '2px 6px', fontWeight: 900, fontSize: '13px', color: '#fff', fontVariantNumeric: 'tabular-nums', minWidth: '28px', textAlign: 'center' }}>{pad(v)}</span>
+          {i < 2 && <span style={{ color: 'rgba(255,255,255,0.4)', fontWeight: 900 }}>:</span>}
+        </span>
+      ))}
+    </div>
+  )
 }
 
 // Contador animado
@@ -124,7 +174,7 @@ function Confetti() {
   )
 }
 
-export default function DashboardClient({ profile, upcomingMatches, recentPredictions, liveMatches, rank, accuracy }: Props) {
+export default function DashboardClient({ profile, upcomingMatches, recentPredictions, liveMatches, rank, accuracy, weeklyWinner }: Props) {
   const [mounted, setMounted] = useState(false)
   const [showConfetti] = useState(() => typeof window !== 'undefined' && sessionStorage.getItem('confetti_shown') !== '1')
 
@@ -260,6 +310,64 @@ export default function DashboardClient({ profile, upcomingMatches, recentPredic
           </div>
         </div>
       )}
+
+      {/* ═══ PREMIO SEMANAL ═══ */}
+      <div style={{
+        background: 'linear-gradient(135deg, #1a0a2e, #2d1b4e)',
+        border: '1px solid #7c3aed44', borderRadius: '16px',
+        padding: '16px 18px', marginBottom: '16px', position: 'relative', overflow: 'hidden',
+      }}>
+        <div style={{ position: 'absolute', top: '-20px', right: '-20px', fontSize: '80px', opacity: 0.08, transform: 'rotate(15deg)' }}>🍔</div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+              <span style={{ fontSize: '22px' }}>🍔</span>
+              <span style={{ fontWeight: 800, color: '#f0f0f5', fontSize: '15px' }}>Premio Semanal</span>
+            </div>
+            <p style={{ color: '#a78bfa', fontSize: '12px', margin: 0 }}>
+              El que más puntos sume esta semana gana una hamburguesa 🏆
+            </p>
+          </div>
+          <WeeklyCountdown />
+        </div>
+
+        {weeklyWinner && weeklyWinner.points > 0 && (
+          <div style={{ marginTop: '12px', borderTop: '1px solid #7c3aed33', paddingTop: '12px' }}>
+            {(() => {
+              const isWeekOver = new Date().getDay() === 0 && new Date().getHours() === 23
+              return isWeekOver ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ fontSize: '20px' }}>🥇</span>
+                  <span style={{ color: '#fbbf24', fontWeight: 800, fontSize: '14px' }}>
+                    ¡{weeklyWinner.username} ganó la hamburguesa! ({weeklyWinner.points} pts)
+                  </span>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{
+                    width: '28px', height: '28px', borderRadius: '50%', overflow: 'hidden', flexShrink: 0,
+                    background: 'linear-gradient(135deg,#7c3aed,#a855f7)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    {weeklyWinner.avatar_url
+                      ? <img src={weeklyWinner.avatar_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+                      : <span style={{ color: '#fff', fontWeight: 700, fontSize: '11px' }}>{weeklyWinner.username?.[0]?.toUpperCase()}</span>
+                    }
+                  </div>
+                  <div>
+                    <span style={{ color: '#c4b5fd', fontSize: '12px' }}>Va ganando: </span>
+                    <span style={{ color: '#f0f0f5', fontWeight: 700, fontSize: '13px' }}>{weeklyWinner.username}</span>
+                    <span style={{ color: '#a78bfa', fontSize: '12px' }}> con {weeklyWinner.points} pts</span>
+                  </div>
+                  <Link href="/ranking" style={{ textDecoration: 'none', marginLeft: 'auto', flexShrink: 0 }}>
+                    <span style={{ color: '#a78bfa', fontSize: '11px', fontWeight: 600 }}>Ver ranking →</span>
+                  </Link>
+                </div>
+              )
+            })()}
+          </div>
+        )}
+      </div>
 
       {/* ═══ PRÓXIMO PARTIDO + COUNTDOWN ═══ */}
       {nextMatch && (
