@@ -28,7 +28,9 @@ export default function NavBar({ profile }: { profile: Profile | null }) {
       {/* Top bar */}
       <header style={{
         background: '#12121a', borderBottom: '1px solid #1e1e2e',
-        padding: '12px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        paddingTop: 'calc(12px + env(safe-area-inset-top))',
+        paddingBottom: '12px', paddingLeft: '24px', paddingRight: '24px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         position: 'sticky', top: 0, zIndex: 100,
       }}>
         <Link href="/dashboard" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
