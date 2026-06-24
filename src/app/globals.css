@@ -7,11 +7,11 @@
    ============================================ */
 
 :root {
-  --bg:#0B1220;       --surface:#161E2E;  --surface2:#101724;
-  --ink:#F3F7FF;      --muted:#7E89A3;    --line:#23304A;
-  --accent:#5FB1FF;   --accent-ink:#04121F; --accent2:#FFD23F;
-  --grad: linear-gradient(135deg,#4FA8FF 0%,#FFC83D 100%);
-  --shadow: 0 14px 34px rgba(0,0,0,.5);
+  --bg:#E9F3FF;       --surface:#FFFFFF;  --surface2:#F1F7FF;
+  --ink:#0C2340;      --muted:#6B7C93;    --line:#E2EBF6;
+  --accent:#2E8BE6;   --accent-ink:#FFFFFF; --accent2:#F6B400;
+  --grad: linear-gradient(135deg,#3D9BF0 0%,#1E6FD0 100%);
+  --shadow: 0 12px 30px rgba(30,90,180,.15);
   /* colores semánticos fijos */
   --pos:#1E9E6A; --neg:#E0457B;
   --gold:#F6B400; --silver:#C4CCDA; --bronze:#DD9A5E;

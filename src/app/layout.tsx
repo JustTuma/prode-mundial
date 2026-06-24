@@ -25,22 +25,22 @@ export const metadata: Metadata = {
 const themeScript = `
 (function(){
   try {
-    var t = localStorage.getItem('prode_theme') || 'noche';
+    var t = localStorage.getItem('prode_theme') || 'hinchada';
     document.documentElement.setAttribute('data-theme', t);
   } catch(e) {
-    document.documentElement.setAttribute('data-theme', 'noche');
+    document.documentElement.setAttribute('data-theme', 'hinchada');
   }
 })();
 `;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" data-theme="noche">
+    <html lang="es" data-theme="hinchada">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
-        <meta name="theme-color" content="#0B1220" />
+        <meta name="theme-color" content="#E9F3FF" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />

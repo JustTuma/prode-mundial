@@ -8,13 +8,13 @@ interface ThemeCtx {
   setTheme: (t: Theme) => void
 }
 
-const Ctx = createContext<ThemeCtx>({ theme: 'noche', setTheme: () => {} })
+const Ctx = createContext<ThemeCtx>({ theme: 'hinchada', setTheme: () => {} })
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>('noche')
+  const [theme, setThemeState] = useState<Theme>('hinchada')
 
   useEffect(() => {
-    const saved = (localStorage.getItem('prode_theme') as Theme) || 'noche'
+    const saved = (localStorage.getItem('prode_theme') as Theme) || 'hinchada'
     setThemeState(saved)
     document.documentElement.setAttribute('data-theme', saved)
   }, [])
