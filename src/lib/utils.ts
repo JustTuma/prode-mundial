@@ -62,6 +62,17 @@ export function getStageLabel(stage: string): string {
   return labels[stage] || stage
 }
 
+/** Racha actual: predicciones correctas consecutivas más recientes.
+ *  Recibe predicciones de partidos finalizados ordenadas por fecha (más nueva primero). */
+export function currentStreak(preds: { is_correct_result: boolean }[]): number {
+  let s = 0
+  for (const p of preds) {
+    if (p.is_correct_result) s++
+    else break
+  }
+  return s
+}
+
 /** Etiqueta linda para grupo o etapa (ej: "GROUP_B" -> "Grupo B") */
 export function matchLabel(groupName: string | null, stage: string): string {
   if (groupName) {

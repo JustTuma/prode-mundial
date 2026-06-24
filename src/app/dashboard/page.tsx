@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import DashboardClient from '@/components/dashboard/DashboardClient'
 import { InstallModal } from '@/components/InstallGuide'
 import PointsToast from '@/components/dashboard/PointsToast'
+import { currentStreak } from '@/lib/utils'
 
 export const revalidate = 0
 
@@ -30,6 +31,18 @@ export default async function DashboardPage() {
   const nextMatch = (upcomingRes.data || [])[0] || null
   const liveMatches = liveRes.data || []
   const wallPosts = wallRes.data || []
+
+  // Racha actual (predicciones correctas consecutivas más recientes)
+  const { data: streakData } = await supabase
+    .from('predictions')
+    .select('is_correct_result, matches!inner(match_date, status)')
+    .eq('user_id', user.id)
+    .eq('matches.status', 'FINISHED')
+    .limit(60)
+  const streakSorted = (streakData || [])
+    .sort((a: any, b: any) => new Date(b.matches.match_date).getTime() - new Date(a.matches.match_date).getTime())
+    .map((p: any) => ({ is_correct_result: p.is_correct_result }))
+  const myStreak = currentStreak(streakSorted)
 
   // ¿Ya pronosticó el próximo partido?
   let nextPredicted = false
@@ -82,6 +95,7 @@ export default async function DashboardPage() {
         rank={rank}
         myPoints={myPoints}
         myExact={myExact}
+        myStreak={myStreak}
         pointsToLeader={pointsToLeader}
         top4={top4}
         wallPosts={wallPosts}

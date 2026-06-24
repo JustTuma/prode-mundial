@@ -21,7 +21,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
   const prediction = predRes.data
   const isFinished = match.status === 'FINISHED'
   const isLive = match.status === 'LIVE' || match.status === 'IN_PLAY' || match.status === 'PAUSED'
-  const canPredict = !isFinished && !isLive && !!user
+  const canPredict = !isFinished && !isLive && !!user && new Date(match.match_date).getTime() > Date.now()
 
   const { data: allPreds } = await supabase.from('predictions').select('home_score_pred, away_score_pred').eq('match_id', id)
 

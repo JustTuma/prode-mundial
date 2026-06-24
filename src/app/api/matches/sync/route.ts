@@ -118,6 +118,29 @@ async function checkAndAwardAchievements(supabase: any, userId: string) {
   if (profile.total_points >= 50) toAward.push('points_50')
   if (profile.total_points >= 100) toAward.push('points_100')
   if (profile.total_points >= 200) toAward.push('points_200')
+
+  // Racha de 3+ aciertos seguidos (streak_3)
+  const { data: streakData } = await supabase
+    .from('predictions')
+    .select('is_correct_result, matches!inner(match_date, status)')
+    .eq('user_id', userId)
+    .eq('matches.status', 'FINISHED')
+    .limit(60)
+  const ordered = (streakData || [])
+    .sort((a: any, b: any) => new Date(b.matches.match_date).getTime() - new Date(a.matches.match_date).getTime())
+  let streak = 0
+  for (const p of ordered) { if (p.is_correct_result) streak++; else break }
+  if (streak >= 3) toAward.push('streak_3')
+
+  // Fanático: pronosticó todos los partidos de fase de grupos jugados
+  const { count: groupFinished } = await supabase
+    .from('matches').select('id', { count: 'exact', head: true })
+    .eq('stage', 'GROUP_STAGE').eq('status', 'FINISHED')
+  const { data: groupPreds } = await supabase
+    .from('predictions').select('match_id, matches!inner(stage, status)')
+    .eq('user_id', userId).eq('matches.stage', 'GROUP_STAGE').eq('matches.status', 'FINISHED')
+  if (groupFinished && groupFinished > 0 && (groupPreds?.length || 0) >= groupFinished) toAward.push('all_group')
+
   for (const achievementId of toAward) {
     await supabase.from('user_achievements').upsert(
       { user_id: userId, achievement_id: achievementId },

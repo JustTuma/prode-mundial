@@ -12,6 +12,7 @@ interface Props {
   rank: number
   myPoints: number
   myExact: number
+  myStreak?: number
   pointsToLeader: number
   top4: { pos: number; username: string; avatar_url: string | null; points: number; isYou: boolean }[]
   wallPosts: any[]
@@ -48,7 +49,7 @@ function timeAgo(dateStr: string) {
   return `hace ${Math.floor(h / 24)}d`
 }
 
-export default function DashboardClient({ profile, nextMatch, nextPredicted, liveMatches, rank, myPoints, myExact, pointsToLeader, top4, wallPosts, weeklyWinner, userId }: Props) {
+export default function DashboardClient({ profile, nextMatch, nextPredicted, liveMatches, rank, myPoints, myExact, myStreak, pointsToLeader, top4, wallPosts, weeklyWinner, userId }: Props) {
   const cd = useCountdown(nextMatch?.match_date)
   const progress = rank === 1 ? 100 : Math.max(8, Math.min(95, Math.round((myPoints / (myPoints + pointsToLeader || 1)) * 100)))
 
@@ -75,7 +76,7 @@ export default function DashboardClient({ profile, nextMatch, nextPredicted, liv
             <div style={{ width: `${progress}%`, height: '100%', background: 'var(--accent2)', borderRadius: '999px', transition: 'width .6s ease' }} />
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '9px', fontSize: '11px', fontWeight: 700, opacity: .92 }}>
-            <span>🎯 {myExact} marcadores exactos</span>
+            <span>{myStreak && myStreak >= 2 ? `🔥 Racha de ${myStreak}` : `🎯 ${myExact} exactos`}</span>
             <span>{profile?.predictions_made || 0} pronósticos</span>
           </div>
         </div>

@@ -25,10 +25,10 @@ function Stepper({ value, onChange }: { value: number; onChange: (v: number) => 
   )
 }
 
-function PredictorCard({ match, pred, userId, onSaved }: { match: Match; pred: Prediction | undefined; userId?: string; onSaved: (m: number, h: number, a: number) => void }) {
+function PredictorCard({ match, pred, userId, onSaved, locked }: { match: Match; pred: Prediction | undefined; userId?: string; onSaved: (m: number, h: number, a: number) => void; locked?: boolean }) {
   const [h, setH] = useState(pred?.home_score_pred ?? 0)
   const [a, setA] = useState(pred?.away_score_pred ?? 0)
-  const [editing, setEditing] = useState(!pred)
+  const [editing, setEditing] = useState(!pred && !locked)
   const [saving, setSaving] = useState(false)
   const supabase = createClient()
 
@@ -83,8 +83,17 @@ function PredictorCard({ match, pred, userId, onSaved }: { match: Match; pred: P
             </div>
           </div>
           <div style={{ marginTop: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--surface2)', borderRadius: '12px', padding: '10px 14px' }}>
-            <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--accent)' }}>✓ Pronóstico cargado</span>
-            <button onClick={() => setEditing(true)} style={{ background: 'none', border: 'none', color: 'var(--muted)', fontWeight: 800, fontSize: '12px', cursor: 'pointer', textDecoration: 'underline', fontFamily: 'Archivo' }}>Editar</button>
+            {locked ? (
+              <>
+                <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--neg)' }}>🔒 En juego · bloqueado</span>
+                <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--muted)' }}>{pred ? 'Tu pronóstico arriba' : 'Sin pronóstico'}</span>
+              </>
+            ) : (
+              <>
+                <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--accent)' }}>✓ Pronóstico cargado</span>
+                <button onClick={() => setEditing(true)} style={{ background: 'none', border: 'none', color: 'var(--muted)', fontWeight: 800, fontSize: '12px', cursor: 'pointer', textDecoration: 'underline', fontFamily: 'Archivo' }}>Editar</button>
+              </>
+            )}
           </div>
         </>
       )}
@@ -108,7 +117,12 @@ export default function MatchesView({ matches, predictions, userId }: { matches:
   }
 
   const now = Date.now()
-  const upcoming = matches.filter(m => m.status !== 'FINISHED' && new Date(m.match_date).getTime() > now)
+  const started = (m: Match) => new Date(m.match_date).getTime() <= now || ['IN_PLAY', 'PAUSED', 'LIVE'].includes(m.status)
+  // Editables: no empezaron y no terminaron
+  const upcoming = matches.filter(m => m.status !== 'FINISHED' && !started(m))
+    .sort((x, y) => new Date(x.match_date).getTime() - new Date(y.match_date).getTime())
+  // En juego: empezaron pero no terminaron -> bloqueados
+  const live = matches.filter(m => m.status !== 'FINISHED' && started(m))
     .sort((x, y) => new Date(x.match_date).getTime() - new Date(y.match_date).getTime())
   const played = matches.filter(m => m.status === 'FINISHED')
     .sort((x, y) => new Date(y.match_date).getTime() - new Date(x.match_date).getTime())
@@ -134,9 +148,12 @@ export default function MatchesView({ matches, predictions, userId }: { matches:
       </div>
 
       {filter === 'proximos' && (
-        upcoming.length === 0
-          ? <div className="card" style={{ padding: '32px', textAlign: 'center', color: 'var(--muted)' }}>No hay próximos partidos</div>
-          : upcoming.map(m => <PredictorCard key={m.id} match={m} pred={localPreds[m.id]} userId={userId} onSaved={onSaved} />)
+        <>
+          {live.map(m => <PredictorCard key={m.id} match={m} pred={localPreds[m.id]} userId={userId} onSaved={onSaved} locked />)}
+          {upcoming.length === 0 && live.length === 0
+            ? <div className="card" style={{ padding: '32px', textAlign: 'center', color: 'var(--muted)' }}>No hay próximos partidos</div>
+            : upcoming.map(m => <PredictorCard key={m.id} match={m} pred={localPreds[m.id]} userId={userId} onSaved={onSaved} />)}
+        </>
       )}
 
       {filter === 'jugados' && (

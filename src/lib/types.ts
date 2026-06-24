@@ -53,27 +53,6 @@ export interface BonusPrediction {
   points_earned: number
 }
 
-export interface League {
-  id: string
-  name: string
-  description: string | null
-  invite_code: string
-  owner_id: string
-  avatar_emoji: string
-  is_public: boolean
-  max_members: number
-  created_at: string
-  member_count?: number
-}
-
-export interface LeagueMember {
-  league_id: string
-  user_id: string
-  joined_at: string
-  league_points: number
-  league_rank: number | null
-  profiles?: Profile
-}
 
 export interface MatchComment {
   id: string

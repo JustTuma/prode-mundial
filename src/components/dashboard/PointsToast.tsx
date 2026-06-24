@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import Confetti from '@/components/ui/Confetti'
 
 interface Props {
   totalPoints: number
@@ -8,6 +9,7 @@ interface Props {
 
 export default function PointsToast({ totalPoints, userId }: Props) {
   const [show, setShow] = useState(false)
+  const [confetti, setConfetti] = useState(false)
   const [gained, setGained] = useState(0)
 
   useEffect(() => {
@@ -16,6 +18,7 @@ export default function PointsToast({ totalPoints, userId }: Props) {
     if (totalPoints > prev && prev > 0) {
       setGained(totalPoints - prev)
       setShow(true)
+      setConfetti(true)
       setTimeout(() => setShow(false), 4000)
     }
     localStorage.setItem(key, totalPoints.toString())
@@ -24,6 +27,8 @@ export default function PointsToast({ totalPoints, userId }: Props) {
   if (!show || gained <= 0) return null
 
   return (
+    <>
+    {confetti && <Confetti onDone={() => setConfetti(false)} />}
     <div style={{
       position: 'fixed', top: '80px', left: '50%', transform: 'translateX(-50%)',
       zIndex: 1000, animation: 'slideDown 0.4s ease',
@@ -60,5 +65,6 @@ export default function PointsToast({ totalPoints, userId }: Props) {
         </div>
       </div>
     </div>
+    </>
   )
 }
