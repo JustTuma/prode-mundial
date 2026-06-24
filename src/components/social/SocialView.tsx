@@ -226,10 +226,16 @@ export default function SocialView({ feedItems, wallPosts: initialPosts, userId 
     e.preventDefault()
     if (!text.trim() || !userId) return
     setPosting(true)
-    const { data } = await supabase.from('wall_posts')
+    const { data, error } = await supabase.from('wall_posts')
       .insert({ user_id: userId, content: text.trim() })
       .select('*, profiles(id, username, avatar_url), wall_reactions(emoji, user_id)')
       .single()
+    if (error) {
+      console.error('Error posting:', error)
+      alert('Error al publicar: ' + error.message)
+      setPosting(false)
+      return
+    }
     if (data) { setPosts(prev => [data, ...prev]); setText('') }
     setPosting(false)
     router.refresh()
