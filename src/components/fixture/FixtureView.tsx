@@ -12,11 +12,11 @@ function Dot({ code }: { code: string | null }) {
 }
 
 function GroupTable({ matches }: { matches: Match[] }) {
-  const teams: Record<string, { code: string; pj: number; dg: number; pts: number }> = {}
+  const teams: Record<string, { code: string; flag: string | null; pj: number; dg: number; pts: number }> = {}
   matches.forEach(m => {
-    [[m.home_team, m.home_team_code], [m.away_team, m.away_team_code]].forEach(([name, code]) => {
+    [[m.home_team, m.home_team_code, m.home_team_flag], [m.away_team, m.away_team_code, m.away_team_flag]].forEach(([name, code, flag]) => {
       const k = name as string
-      if (k && k !== 'Por definir' && !teams[k]) teams[k] = { code: teamCode(name as string, code as string), pj: 0, dg: 0, pts: 0 }
+      if (k && k !== 'Por definir' && !teams[k]) teams[k] = { code: teamCode(name as string, code as string), flag: (flag as string) || null, pj: 0, dg: 0, pts: 0 }
     })
     if (m.status !== 'FINISHED' || m.home_score == null || m.away_score == null) return
     const H = teams[m.home_team], A = teams[m.away_team]
@@ -32,7 +32,7 @@ function GroupTable({ matches }: { matches: Match[] }) {
       {sorted.map((r, i) => (
         <div key={r.n} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 8px', borderRadius: '10px', background: i < 2 ? 'var(--surface2)' : 'transparent', borderLeft: `3px solid ${i < 2 ? 'var(--accent)' : 'transparent'}`, marginBottom: '4px' }}>
           <span className="font-display" style={{ width: '14px', fontSize: '13px', color: 'var(--muted)' }}>{i + 1}</span>
-          <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: teamColor(r.code), color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Anton', fontSize: '10px', flexShrink: 0 }}>{r.code}</div>
+          <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: teamColor(r.code), color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Anton', fontSize: '10px', flexShrink: 0, overflow: 'hidden' }}>{r.flag ? <img src={r.flag} alt={r.code} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : r.code}</div>
           <span style={{ flex: 1, fontSize: '13px', fontWeight: 700, color: 'var(--ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.n}</span>
           <span style={{ width: '22px', textAlign: 'center', fontSize: '12px', color: 'var(--muted)', fontWeight: 600 }}>{r.pj}</span>
           <span style={{ width: '24px', textAlign: 'center', fontSize: '12px', color: 'var(--muted)', fontWeight: 600 }}>{r.dg > 0 ? '+' : ''}{r.dg}</span>
@@ -48,9 +48,11 @@ function BracketMatch({ m }: { m: Match }) {
   const homeWon = isFinished && m.home_score! > m.away_score!
   const awayWon = isFinished && m.away_score! > m.home_score!
   const tbd = !m.home_team || m.home_team === 'Por definir'
-  const row = (name: string, code: string | null, score: number | null, won: boolean, real: boolean) => (
+  const row = (name: string, code: string | null, flag: string | null, score: number | null, won: boolean, real: boolean) => (
     <div style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '4px 0', opacity: real ? 1 : 0.45 }}>
-      <Dot code={real ? code : null} />
+      {real && flag
+        ? <img src={flag} alt="" style={{ width: '16px', height: '12px', objectFit: 'cover', borderRadius: '2px', flexShrink: 0 }} />
+        : <Dot code={real ? code : null} />}
       <span style={{ flex: 1, fontSize: '12px', fontWeight: won ? 900 : 600, color: 'var(--ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{real ? teamCode(name, code) : '?'}</span>
       <span className="font-display" style={{ fontSize: '14px', color: 'var(--ink)' }}>{score != null ? score : ''}</span>
     </div>
@@ -58,8 +60,8 @@ function BracketMatch({ m }: { m: Match }) {
   return (
     <Link href={`/matches/${m.id}`} style={{ textDecoration: 'none' }}>
       <div className="card" style={{ padding: '8px 9px', borderRadius: '12px', width: '120px' }}>
-        {row(m.home_team, m.home_team_code, m.home_score, homeWon, !tbd)}
-        {row(m.away_team, m.away_team_code, m.away_score, awayWon, !tbd)}
+        {row(m.home_team, m.home_team_code, m.home_team_flag, m.home_score, homeWon, !tbd)}
+        {row(m.away_team, m.away_team_code, m.away_team_flag, m.away_score, awayWon, !tbd)}
       </div>
     </Link>
   )
