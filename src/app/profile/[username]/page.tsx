@@ -1,262 +1,108 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
+import Link from 'next/link'
+import TeamAvatar from '@/components/ui/TeamAvatar'
+import { personColor } from '@/lib/teams'
+
+export const revalidate = 0
+
+const ALL_ACHIEVEMENTS = [
+  { id: 'first_pred', emoji: '🎯' }, { id: 'exacto_1', emoji: '🦅' }, { id: 'exacto_5', emoji: '🔮' },
+  { id: 'exacto_10', emoji: '🧙' }, { id: 'points_50', emoji: '🔥' }, { id: 'points_100', emoji: '💯' },
+  { id: 'points_200', emoji: '🏆' }, { id: 'all_group', emoji: '⚽' }, { id: 'champion_correct', emoji: '🌟' },
+]
 
 export default async function PublicProfilePage({ params }: { params: Promise<{ username: string }> }) {
   const { username } = await params
   const supabase = await createClient()
   const { data: { user: me } } = await supabase.auth.getUser()
 
-  const [profileRes, rankRes] = await Promise.all([
-    supabase.from('profiles').select('*').eq('username', decodeURIComponent(username)).single(),
-    supabase.from('profiles').select('id').order('total_points', { ascending: false }),
-  ])
-
-  if (!profileRes.data) notFound()
-  const profile = profileRes.data
-  const rank = (rankRes.data || []).findIndex(p => p.id === profile.id) + 1
+  const { data: profile } = await supabase.from('profiles').select('*').eq('username', decodeURIComponent(username)).single()
+  if (!profile) notFound()
   const isMe = me?.id === profile.id
 
-  const [predsRes, achievementsRes, myPredsRes, myProfileRes] = await Promise.all([
-    supabase.from('predictions')
-      .select('*, matches(*)')
-      .eq('user_id', profile.id)
-      .order('created_at', { ascending: false }),
+  const [predsRes, achRes, allPredsRes] = await Promise.all([
+    supabase.from('predictions').select('*, matches(*)').eq('user_id', profile.id).order('created_at', { ascending: false }).limit(40),
     supabase.from('user_achievements').select('achievement_id').eq('user_id', profile.id),
-    me && me.id !== profile.id
-      ? supabase.from('predictions').select('match_id, home_score_pred, away_score_pred, is_exact, is_correct_result, points_earned').eq('user_id', me.id)
-      : { data: [] },
-    me && me.id !== profile.id
-      ? supabase.from('profiles').select('*').eq('id', me.id).single()
-      : { data: null },
+    supabase.from('predictions').select('user_id, points_earned, is_exact').gt('points_earned', -1),
   ])
 
   const predictions = predsRes.data || []
-  const earnedIds = new Set((achievementsRes.data || []).map(a => a.achievement_id))
-  const accuracy = profile.predictions_made > 0
-    ? Math.round((profile.correct_results / profile.predictions_made) * 100) : 0
-  const myPreds = new Map((myPredsRes.data || []).map((p: any) => [p.match_id, p]))
-  const myProfile = myProfileRes.data
-  const myRank = myProfile ? (rankRes.data || []).findIndex((p: any) => p.id === me?.id) + 1 : 0
+  const earned = new Set((achRes.data || []).map(a => a.achievement_id))
 
-  const allAchievements = [
-    { id: 'first_pred', name: 'Primera Predicción', emoji: '🎯' },
-    { id: 'exacto_1', name: 'Ojo de Águila', emoji: '🦅' },
-    { id: 'exacto_5', name: 'Adivino', emoji: '🔮' },
-    { id: 'exacto_10', name: 'Mago del Prode', emoji: '🧙' },
-    { id: 'points_50', name: 'En Racha', emoji: '🔥' },
-    { id: 'points_100', name: 'Centurión', emoji: '💯' },
-    { id: 'points_200', name: 'Leyenda', emoji: '🏆' },
-    { id: 'all_group', name: 'Fanático', emoji: '⚽' },
-    { id: 'champion_correct', name: 'El Oráculo', emoji: '🌟' },
-    { id: 'streak_3', name: 'Invicto', emoji: '⚡' },
-  ]
+  const totals: Record<string, { points: number; exact: number }> = {}
+  for (const p of (allPredsRes.data || [])) {
+    if (!totals[p.user_id]) totals[p.user_id] = { points: 0, exact: 0 }
+    totals[p.user_id].points += p.points_earned || 0
+    if (p.is_exact) totals[p.user_id].exact++
+  }
+  const sorted = Object.entries(totals).sort((a, b) => b[1].points - a[1].points)
+  const rank = sorted.findIndex(([id]) => id === profile.id) + 1
+  const points = totals[profile.id]?.points ?? 0
+  const exact = totals[profile.id]?.exact ?? 0
+  const correct = predictions.filter((p: any) => p.is_correct_result).length
 
   return (
-    <div style={{ paddingBottom: '100px', maxWidth: '600px', margin: '0 auto' }}>
+    <div className="risein" style={{ paddingBottom: '40px' }}>
       {/* Header */}
-      <div style={{
-        background: 'linear-gradient(135deg, #003087 0%, #0050c8 60%, #1a8cff 100%)',
-        borderRadius: '20px', padding: '28px 24px', marginBottom: '20px', position: 'relative', overflow: 'hidden',
-      }}>
-        <div style={{
-          position: 'absolute', inset: 0,
-          background: 'repeating-linear-gradient(90deg, transparent 0px, transparent 18px, rgba(255,255,255,0.06) 18px, rgba(255,255,255,0.06) 36px)',
-        }} />
-        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px' }}>
-          <div style={{
-            width: '72px', height: '72px', borderRadius: '50%', flexShrink: 0,
-            background: 'rgba(255,255,255,0.2)', border: '3px solid rgba(255,255,255,0.4)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            overflow: 'hidden', boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
-          }}>
-            {profile.avatar_url
-              ? <img src={profile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              : <span style={{ color: 'white', fontWeight: 900, fontSize: '28px' }}>{profile.username?.[0]?.toUpperCase()}</span>
-            }
-          </div>
-          <div>
-            <h1 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 900, color: '#fff' }}>
-              {profile.username} {isMe && <span style={{ fontSize: '12px', background: 'rgba(255,255,255,0.2)', padding: '2px 8px', borderRadius: '99px' }}>vos</span>}
-            </h1>
-            {profile.full_name && <p style={{ color: 'rgba(255,255,255,0.7)', margin: '2px 0 0', fontSize: '14px' }}>{profile.full_name}</p>}
-            <p style={{ color: 'rgba(255,255,255,0.5)', margin: '2px 0 0', fontSize: '12px' }}>
-              Desde {new Date(profile.created_at).toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })}
-            </p>
-          </div>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '14px 0 18px' }}>
+        <div style={{ width: '84px', height: '84px', borderRadius: '50%', background: 'var(--grad)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontFamily: 'Anton', fontSize: '34px', boxShadow: 'var(--shadow)', overflow: 'hidden' }}>
+          {profile.avatar_url ? <img src={profile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : profile.username?.[0]?.toUpperCase()}
         </div>
+        <h1 className="font-display" style={{ fontSize: '24px', color: 'var(--ink)', marginTop: '12px' }}>{profile.full_name || profile.username}</h1>
+        <span style={{ fontSize: '13px', color: 'var(--muted)', fontWeight: 600 }}>@{profile.username}{isMe && ' · vos'}</span>
+      </div>
 
-        <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
-          {[
-            { label: 'Puntos', value: profile.total_points || 0, emoji: '⭐' },
-            { label: 'Ranking', value: rank ? `#${rank}` : '-', emoji: '🏅' },
-            { label: 'Exactos', value: profile.exact_scores || 0, emoji: '🎯' },
-            { label: 'Precisión', value: `${accuracy}%`, emoji: '📊' },
-          ].map(s => (
-            <div key={s.label} style={{
-              background: 'rgba(0,0,0,0.25)', borderRadius: '12px', padding: '10px 6px',
-              textAlign: 'center', border: '1px solid rgba(255,255,255,0.1)',
-            }}>
-              <div style={{ fontSize: '14px', marginBottom: '2px' }}>{s.emoji}</div>
-              <div style={{ fontWeight: 900, fontSize: '1rem', color: '#fff' }}>{s.value}</div>
-              <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '10px' }}>{s.label}</div>
-            </div>
-          ))}
-        </div>
+      {/* Stats */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '10px' }}>
+        {[{ v: points, l: 'Puntos', c: 'var(--accent)' }, { v: rank ? `#${rank}` : '-', l: 'Posición', c: 'var(--ink)' }, { v: exact, l: 'Exactos', c: 'var(--accent2)' }].map(s => (
+          <div key={s.l} className="card" style={{ padding: '14px', borderRadius: '16px', textAlign: 'center' }}>
+            <div className="font-display" style={{ fontSize: '26px', color: s.c }}>{s.v}</div>
+            <div style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: 700 }}>{s.l}</div>
+          </div>
+        ))}
       </div>
 
       {/* Logros */}
-      {earnedIds.size > 0 && (
-        <div style={{ background: '#12121a', border: '1px solid #1e1e2e', borderRadius: '14px', padding: '18px', marginBottom: '20px' }}>
-          <h2 style={{ fontSize: '13px', fontWeight: 700, color: '#94a3b8', margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-            🏆 Logros ({earnedIds.size}/{allAchievements.length})
-          </h2>
+      {earned.size > 0 && (
+        <>
+          <h2 className="font-display" style={{ fontSize: '18px', color: 'var(--ink)', margin: '20px 0 12px' }}>Logros ({earned.size})</h2>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-            {allAchievements.filter(a => earnedIds.has(a.id)).map(a => (
-              <div key={a.id} style={{
-                background: '#1e1e2e', border: '1px solid #f59e0b33',
-                borderRadius: '99px', padding: '6px 12px',
-                display: 'flex', alignItems: 'center', gap: '6px',
-              }}>
-                <span style={{ fontSize: '16px' }}>{a.emoji}</span>
-                <span style={{ color: '#f0f0f5', fontSize: '12px', fontWeight: 600 }}>{a.name}</span>
-              </div>
+            {ALL_ACHIEVEMENTS.filter(a => earned.has(a.id)).map(a => (
+              <div key={a.id} style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'var(--accent2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px' }}>{a.emoji}</div>
             ))}
           </div>
-        </div>
-      )}
-
-      {/* COMPARADOR */}
-      {myProfile && !isMe && (
-        <div style={{ background: '#12121a', border: '1px solid #1e1e2e', borderRadius: '14px', padding: '18px', marginBottom: '20px' }}>
-          <h2 style={{ fontSize: '13px', fontWeight: 700, color: '#94a3b8', margin: '0 0 16px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-            ⚔️ Vos vs {profile.username}
-          </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: '12px', alignItems: 'center' }}>
-            {/* Yo */}
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ width: '44px', height: '44px', borderRadius: '50%', margin: '0 auto 6px', overflow: 'hidden', background: 'linear-gradient(135deg,#003087,#0050c8)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {myProfile.avatar_url
-                  ? <img src={myProfile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  : <span style={{ color: '#fff', fontWeight: 700 }}>{myProfile.username?.[0]?.toUpperCase()}</span>
-                }
-              </div>
-              <div style={{ fontWeight: 700, fontSize: '13px', color: '#f0f0f5' }}>{myProfile.username}</div>
-              <div style={{ color: '#6b7280', fontSize: '11px' }}>#{myRank}</div>
-            </div>
-
-            {/* Stats */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {[
-                { label: 'Puntos', mine: myProfile.total_points, theirs: profile.total_points },
-                { label: 'Exactos', mine: myProfile.exact_scores, theirs: profile.exact_scores },
-                { label: 'Correctos', mine: myProfile.correct_results, theirs: profile.correct_results },
-              ].map(s => {
-                const iWin = s.mine > s.theirs
-                const theyWin = s.theirs > s.mine
-                return (
-                  <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ fontWeight: 900, fontSize: '15px', color: iWin ? '#10b981' : theyWin ? '#6b7280' : '#f0f0f5', minWidth: '28px', textAlign: 'right' }}>{s.mine}</span>
-                    <span style={{ color: '#374151', fontSize: '10px', textAlign: 'center', minWidth: '48px' }}>{s.label}</span>
-                    <span style={{ fontWeight: 900, fontSize: '15px', color: theyWin ? '#ef4444' : iWin ? '#6b7280' : '#f0f0f5', minWidth: '28px' }}>{s.theirs}</span>
-                  </div>
-                )
-              })}
-              {(() => {
-                const commonMatches = predictions.filter(p => myPreds.has(p.match_id) && p.matches?.status === 'FINISHED')
-                const agreed = commonMatches.filter(p => {
-                  const mine = myPreds.get(p.match_id)
-                  return mine && mine.home_score_pred === p.home_score_pred && mine.away_score_pred === p.away_score_pred
-                }).length
-                if (commonMatches.length === 0) return null
-                return (
-                  <div style={{ borderTop: '1px solid #1e1e2e', paddingTop: '8px', textAlign: 'center' }}>
-                    <span style={{ color: '#6b7280', fontSize: '11px' }}>
-                      Coincidieron en {agreed} de {commonMatches.length} partidos
-                    </span>
-                  </div>
-                )
-              })()}
-            </div>
-
-            {/* Ellos */}
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ width: '44px', height: '44px', borderRadius: '50%', margin: '0 auto 6px', overflow: 'hidden', background: 'linear-gradient(135deg,#7c3aed,#a855f7)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {profile.avatar_url
-                  ? <img src={profile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  : <span style={{ color: '#fff', fontWeight: 700 }}>{profile.username?.[0]?.toUpperCase()}</span>
-                }
-              </div>
-              <div style={{ fontWeight: 700, fontSize: '13px', color: '#f0f0f5' }}>{profile.username}</div>
-              <div style={{ color: '#6b7280', fontSize: '11px' }}>#{rank}</div>
-            </div>
-          </div>
-        </div>
+        </>
       )}
 
       {/* Predicciones */}
-      <div style={{ background: '#12121a', border: '1px solid #1e1e2e', borderRadius: '14px', overflow: 'hidden' }}>
-        <div style={{ padding: '16px 18px', borderBottom: '1px solid #1e1e2e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 style={{ margin: 0, fontSize: '13px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-            🎯 Predicciones ({predictions.length})
-          </h2>
-        </div>
-
-        {predictions.length === 0 ? (
-          <div style={{ padding: '40px', textAlign: 'center', color: '#6b7280' }}>
-            Todavía no hizo predicciones
-          </div>
-        ) : (
-          <div>
-            {predictions.map((pred: any) => {
-              const match = pred.matches
-              const isFinished = match?.status === 'FINISHED'
-              return (
-                <div key={pred.id} style={{
-                  padding: '14px 18px', borderBottom: '1px solid #1e1e2e',
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px',
-                  borderLeft: '3px solid',
-                  borderLeftColor: pred.is_exact ? '#f59e0b' : pred.is_correct_result ? '#10b981' : isFinished ? '#ef4444' : '#1e1e2e',
-                }}>
-                  <div style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{ color: '#94a3b8', fontSize: '12px', marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {match?.home_team} vs {match?.away_team}
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ color: '#f0f0f5', fontWeight: 800, fontSize: '16px' }}>
-                        {pred.home_score_pred} - {pred.away_score_pred}
-                      </span>
-                      {isFinished && (
-                        <span style={{ color: '#6b7280', fontSize: '12px' }}>
-                          (real: {match.home_score}-{match.away_score})
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                    {isFinished ? (
-                      <div>
-                        <span style={{
-                          fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '99px',
-                          background: pred.is_exact ? '#f59e0b22' : pred.is_correct_result ? '#10b98122' : '#ef444422',
-                          color: pred.is_exact ? '#f59e0b' : pred.is_correct_result ? '#10b981' : '#ef4444',
-                        }}>
-                          {pred.is_exact ? '🎯 Exacto' : pred.is_correct_result ? '✅ Correcto' : '❌ Sin puntos'}
-                        </span>
-                        {pred.points_earned > 0 && (
-                          <div style={{ color: '#f59e0b', fontWeight: 800, fontSize: '14px', marginTop: '2px' }}>
-                            +{pred.points_earned} pts
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <span style={{ color: '#374151', fontSize: '11px' }}>Pendiente</span>
-                    )}
+      <h2 className="font-display" style={{ fontSize: '18px', color: 'var(--ink)', margin: '20px 0 12px' }}>Pronósticos ({predictions.length})</h2>
+      {predictions.length === 0 ? (
+        <div className="card" style={{ padding: '32px', textAlign: 'center', color: 'var(--muted)' }}>Todavía no hizo pronósticos</div>
+      ) : (
+        <div className="card" style={{ padding: '4px 14px' }}>
+          {predictions.map((pred: any, i: number) => {
+            const m = pred.matches
+            const fin = m?.status === 'FINISHED'
+            const col = pred.is_exact ? 'var(--pos)' : pred.is_correct_result ? 'var(--accent)' : fin ? 'var(--neg)' : 'var(--muted)'
+            return (
+              <div key={pred.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 0', borderBottom: i < predictions.length - 1 ? '1px solid var(--line)' : 'none' }}>
+                {m && <TeamAvatar name={m.home_team} code={m.home_team_code} flag={m.home_team_flag} size={28} />}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: '12px', color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m?.home_team} vs {m?.away_team}</div>
+                  <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--ink)' }}>
+                    {pred.home_score_pred}-{pred.away_score_pred}{fin && <span style={{ color: 'var(--muted)', fontWeight: 400 }}> · real {m.home_score}-{m.away_score}</span>}
                   </div>
                 </div>
-              )
-            })}
-          </div>
-        )}
+                {fin && <span className="font-display" style={{ fontSize: '15px', color: col }}>{pred.points_earned > 0 ? '+' + pred.points_earned : '0'}</span>}
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      <div style={{ marginTop: '20px', textAlign: 'center' }}>
+        <Link href="/ranking" style={{ color: 'var(--accent)', fontWeight: 800, fontSize: '13px', textDecoration: 'none' }}>← Volver al ranking</Link>
       </div>
     </div>
   )

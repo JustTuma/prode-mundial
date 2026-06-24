@@ -7,6 +7,8 @@ const TEAMS = [
   'Estados Unidos','Japón','Australia','Corea del Sur','Ecuador','Qatar','Ghana','Túnez',
 ]
 
+export const revalidate = 0
+
 export default async function BonusPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -15,13 +17,12 @@ export default async function BonusPage() {
   const { data: bonus } = await supabase.from('bonus_predictions').select('*').eq('user_id', user.id).single()
 
   return (
-    <div style={{ paddingBottom: '80px', maxWidth: '600px', margin: '0 auto' }}>
-      <div style={{ marginBottom: '24px' }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, margin: '0 0 8px' }}>🌟 Predicciones Bonus</h1>
-        <p style={{ color: '#94a3b8', margin: 0 }}>Predicciones especiales con puntos extra</p>
-      </div>
-      <div style={{ background: '#12121a', border: '1px solid #f59e0b44', borderRadius: '12px', padding: '16px', marginBottom: '24px' }}>
-        <h3 style={{ color: '#f59e0b', margin: '0 0 12px', fontSize: '14px' }}>Sistema de puntos bonus</h3>
+    <div className="risein" style={{ paddingBottom: '40px' }}>
+      <h1 className="font-display" style={{ fontSize: '30px', color: 'var(--ink)', margin: '6px 0 4px' }}>Bonus 🌟</h1>
+      <p style={{ color: 'var(--muted)', fontSize: '13px', fontWeight: 600, marginBottom: '16px' }}>Pronósticos especiales con puntos extra al final del Mundial</p>
+
+      <div className="card" style={{ padding: '16px', marginBottom: '20px', borderColor: 'var(--accent2)' }}>
+        <h3 className="font-display" style={{ color: 'var(--accent2)', margin: '0 0 12px', fontSize: '15px' }}>Puntos bonus</h3>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {[
             { emoji: '🏆', label: 'Campeón del Mundial', pts: 10 },
@@ -30,8 +31,8 @@ export default async function BonusPage() {
             { emoji: '⚽', label: 'Goleador del torneo', pts: 5 },
           ].map(b => (
             <div key={b.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: '14px', color: '#94a3b8' }}>{b.emoji} {b.label}</span>
-              <span style={{ fontWeight: 700, color: '#f59e0b', background: '#f59e0b22', padding: '2px 10px', borderRadius: '99px', fontSize: '14px' }}>+{b.pts} pts</span>
+              <span style={{ fontSize: '14px', color: 'var(--ink)', fontWeight: 600 }}>{b.emoji} {b.label}</span>
+              <span style={{ fontWeight: 800, color: 'var(--accent2)', background: 'var(--surface2)', padding: '3px 10px', borderRadius: '999px', fontSize: '13px' }}>+{b.pts}</span>
             </div>
           ))}
         </div>

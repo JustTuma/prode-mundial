@@ -4,16 +4,16 @@ import { useState, useEffect } from 'react'
 function InstallSteps({ onClose }: { onClose?: () => void }) {
   return (
     <div>
-      <p style={{ color: '#94a3b8', fontSize: '13px', marginBottom: '20px', textAlign: 'center' }}>
+      <p style={{ color: 'var(--muted)', fontSize: '13px', marginBottom: '20px', textAlign: 'center' }}>
         Instalá el Prode como app en tu celu para una experiencia nativa 📱
       </p>
 
       {/* iPhone */}
-      <div style={{ background: '#1e1e2e', borderRadius: '12px', padding: '16px', marginBottom: '12px' }}>
+      <div style={{ background: 'var(--line)', borderRadius: '12px', padding: '16px', marginBottom: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
           <span style={{ fontSize: '24px' }}>🍎</span>
-          <span style={{ fontWeight: 700, color: '#f0f0f5', fontSize: '15px' }}>iPhone / iPad</span>
-          <span style={{ color: '#6b7280', fontSize: '12px' }}>(Safari)</span>
+          <span style={{ fontWeight: 700, color: 'var(--ink)', fontSize: '15px' }}>iPhone / iPad</span>
+          <span style={{ color: 'var(--muted)', fontSize: '12px' }}>(Safari)</span>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {[
@@ -24,11 +24,11 @@ function InstallSteps({ onClose }: { onClose?: () => void }) {
           ].map(s => (
             <div key={s.n} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
               <span style={{
-                background: '#003087', color: '#fff', fontWeight: 800, fontSize: '11px',
+                background: 'var(--accent)', color: '#fff', fontWeight: 800, fontSize: '11px',
                 width: '20px', height: '20px', borderRadius: '50%', flexShrink: 0,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>{s.n}</span>
-              <span style={{ color: '#94a3b8', fontSize: '13px', lineHeight: 1.4 }}>
+              <span style={{ color: 'var(--muted)', fontSize: '13px', lineHeight: 1.4 }}>
                 <span style={{ marginRight: '4px' }}>{s.icon}</span>{s.text}
               </span>
             </div>
@@ -37,11 +37,11 @@ function InstallSteps({ onClose }: { onClose?: () => void }) {
       </div>
 
       {/* Android */}
-      <div style={{ background: '#1e1e2e', borderRadius: '12px', padding: '16px', marginBottom: onClose ? '20px' : '0' }}>
+      <div style={{ background: 'var(--line)', borderRadius: '12px', padding: '16px', marginBottom: onClose ? '20px' : '0' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
           <span style={{ fontSize: '24px' }}>🤖</span>
-          <span style={{ fontWeight: 700, color: '#f0f0f5', fontSize: '15px' }}>Android</span>
-          <span style={{ color: '#6b7280', fontSize: '12px' }}>(Chrome)</span>
+          <span style={{ fontWeight: 700, color: 'var(--ink)', fontSize: '15px' }}>Android</span>
+          <span style={{ color: 'var(--muted)', fontSize: '12px' }}>(Chrome)</span>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {[
@@ -52,11 +52,11 @@ function InstallSteps({ onClose }: { onClose?: () => void }) {
           ].map(s => (
             <div key={s.n} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
               <span style={{
-                background: '#003087', color: '#fff', fontWeight: 800, fontSize: '11px',
+                background: 'var(--accent)', color: '#fff', fontWeight: 800, fontSize: '11px',
                 width: '20px', height: '20px', borderRadius: '50%', flexShrink: 0,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>{s.n}</span>
-              <span style={{ color: '#94a3b8', fontSize: '13px', lineHeight: 1.4 }}>
+              <span style={{ color: 'var(--muted)', fontSize: '13px', lineHeight: 1.4 }}>
                 <span style={{ marginRight: '4px' }}>{s.icon}</span>{s.text}
               </span>
             </div>
@@ -67,7 +67,7 @@ function InstallSteps({ onClose }: { onClose?: () => void }) {
       {onClose && (
         <button onClick={onClose} style={{
           width: '100%', padding: '14px',
-          background: 'linear-gradient(135deg, #003087, #0050c8)',
+          background: 'linear-gradient(135deg, var(--accent), #0050c8)',
           color: '#fff', fontWeight: 700, fontSize: '15px',
           border: 'none', borderRadius: '12px', cursor: 'pointer',
         }}>
@@ -107,7 +107,7 @@ export function InstallModal() {
       onClick={e => { if (e.target === e.currentTarget) close() }}
     >
       <div style={{
-        background: '#12121a', borderTop: '1px solid #1e1e2e',
+        background: 'var(--surface)', borderTop: '1px solid var(--line)',
         borderRadius: '20px 20px 0 0', padding: '24px 20px',
         width: '100%', maxWidth: '480px',
         maxHeight: '90vh', overflowY: 'auto',
@@ -121,15 +121,15 @@ export function InstallModal() {
         `}</style>
 
         {/* Handle */}
-        <div style={{ width: '40px', height: '4px', background: '#2a2a3e', borderRadius: '2px', margin: '0 auto 20px' }} />
+        <div style={{ width: '40px', height: '4px', background: 'var(--line)', borderRadius: '2px', margin: '0 auto 20px' }} />
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
           <img src="/icon-192.png" style={{ width: '48px', height: '48px', borderRadius: '12px' }} alt="" />
           <div>
-            <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 900, color: '#f0f0f5' }}>
+            <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 900, color: 'var(--ink)' }}>
               ¡Instalá el Prode! 🏆
             </h2>
-            <p style={{ margin: '2px 0 0', color: '#6b7280', fontSize: '12px' }}>
+            <p style={{ margin: '2px 0 0', color: 'var(--muted)', fontSize: '12px' }}>
               Funciona como una app nativa
             </p>
           </div>
@@ -146,7 +146,7 @@ export function InstallGuideSection() {
   const [open, setOpen] = useState(false)
 
   return (
-    <div style={{ background: '#12121a', border: '1px solid #1e1e2e', borderRadius: '14px', overflow: 'hidden' }}>
+    <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: '14px', overflow: 'hidden' }}>
       <button
         onClick={() => setOpen(o => !o)}
         style={{
@@ -156,9 +156,9 @@ export function InstallGuideSection() {
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <span style={{ fontSize: '20px' }}>📲</span>
-          <span style={{ fontWeight: 700, color: '#f0f0f5', fontSize: '14px' }}>Instalar como app</span>
+          <span style={{ fontWeight: 700, color: 'var(--ink)', fontSize: '14px' }}>Instalar como app</span>
         </div>
-        <span style={{ color: '#6b7280', fontSize: '18px', transition: 'transform 0.2s', transform: open ? 'rotate(180deg)' : 'none' }}>
+        <span style={{ color: 'var(--muted)', fontSize: '18px', transition: 'transform 0.2s', transform: open ? 'rotate(180deg)' : 'none' }}>
           ▾
         </span>
       </button>

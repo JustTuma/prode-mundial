@@ -44,17 +44,17 @@ export default function BonusForm({ teams, existingBonus }: Props) {
   return (
     <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       {fields.map(f => (
-        <div key={f.label} style={{ background: '#12121a', border: '1px solid #1e1e2e', borderRadius: '12px', padding: '16px' }}>
+        <div key={f.label} style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: '16px', padding: '16px', boxShadow: 'var(--shadow)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-            <label style={{ fontWeight: 700, fontSize: '15px' }}>{f.emoji} {f.label}</label>
-            <span style={{ color: '#f59e0b', fontSize: '13px', fontWeight: 700 }}>+{f.pts} pts</span>
+            <label style={{ fontWeight: 700, fontSize: '15px', color: 'var(--ink)' }}>{f.emoji} {f.label}</label>
+            <span style={{ color: 'var(--accent2)', fontSize: '13px', fontWeight: 800 }}>+{f.pts} pts</span>
           </div>
           <select
             value={f.value}
             onChange={e => f.setter(e.target.value)}
             style={{
-              background: '#1e1e2e', border: '1px solid #2a2a3e', borderRadius: '8px',
-              padding: '10px 12px', color: '#f0f0f5', width: '100%', outline: 'none',
+              background: 'var(--surface2)', border: '1px solid var(--line)', borderRadius: '10px',
+              padding: '10px 12px', color: 'var(--ink)', width: '100%', outline: 'none',
               fontSize: '14px', cursor: 'pointer',
             }}
           >
@@ -65,19 +65,19 @@ export default function BonusForm({ teams, existingBonus }: Props) {
       ))}
 
       {/* Top scorer - text input */}
-      <div style={{ background: '#12121a', border: '1px solid #1e1e2e', borderRadius: '12px', padding: '16px' }}>
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: '16px', padding: '16px', boxShadow: 'var(--shadow)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-          <label style={{ fontWeight: 700, fontSize: '15px' }}>⚽ Goleador</label>
-          <span style={{ color: '#f59e0b', fontSize: '13px', fontWeight: 700 }}>+5 pts</span>
+          <label style={{ fontWeight: 700, fontSize: '15px', color: 'var(--ink)' }}>⚽ Goleador</label>
+          <span style={{ color: 'var(--accent2)', fontSize: '13px', fontWeight: 800 }}>+5 pts</span>
         </div>
         <input className="input" placeholder="Nombre del jugador (ej: Messi)" value={topScorer}
           onChange={e => setTopScorer(e.target.value)} />
       </div>
 
-      <button type="submit" className={saved ? 'btn-secondary' : 'btn-gold'} style={{ padding: '14px', fontSize: '16px' }} disabled={loading}>
+      <button type="submit" className="btn-accent" style={{ padding: '14px', fontSize: '16px', background: saved ? 'var(--pos)' : 'var(--accent2)', color: '#04121F' }} disabled={loading}>
         {loading ? '⏳ Guardando...' : saved ? '✅ ¡Guardado!' : '🌟 Guardar predicciones bonus'}
       </button>
-      <p style={{ color: '#374151', fontSize: '12px', textAlign: 'center', margin: 0 }}>
+      <p style={{ color: 'var(--muted)', fontSize: '12px', textAlign: 'center', margin: 0 }}>
         Podés cambiar tus bonus hasta que empiece el primer partido
       </p>
     </form>
