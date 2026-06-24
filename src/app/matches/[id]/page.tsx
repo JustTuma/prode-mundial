@@ -51,8 +51,8 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
         )}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: '16px' }}>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '48px', marginBottom: '8px' }}>
-              {match.home_team_flag ? <img src={match.home_team_flag} style={{ width: '48px', height: '48px', objectFit: 'contain' }} alt="" /> : '🏳️'}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
+              {match.home_team_flag ? <img src={match.home_team_flag} style={{ width: '48px', height: '34px', objectFit: 'contain' }} alt="" /> : <span style={{ fontSize: '48px' }}>🏳️</span>}
             </div>
             <div style={{ fontWeight: 700, fontSize: '16px', color: '#f0f0f5' }}>{match.home_team}</div>
             <div style={{ color: '#6b7280', fontSize: '12px' }}>{match.home_team_code}</div>
@@ -77,8 +77,8 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
             )}
           </div>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '48px', marginBottom: '8px' }}>
-              {match.away_team_flag ? <img src={match.away_team_flag} style={{ width: '48px', height: '48px', objectFit: 'contain' }} alt="" /> : '🏳️'}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
+              {match.away_team_flag ? <img src={match.away_team_flag} style={{ width: '48px', height: '34px', objectFit: 'contain' }} alt="" /> : <span style={{ fontSize: '48px' }}>🏳️</span>}
             </div>
             <div style={{ fontWeight: 700, fontSize: '16px', color: '#f0f0f5' }}>{match.away_team}</div>
             <div style={{ color: '#6b7280', fontSize: '12px' }}>{match.away_team_code}</div>
