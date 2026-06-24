@@ -108,25 +108,33 @@ export default function RankingView({ ranking, weeklyRanking, userId }: {
         <>
           {/* Podium top 3 */}
           {sorted.length >= 3 && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '20px', alignItems: 'flex-end' }}>
-              {[sorted[1], sorted[0], sorted[2]].map((p, i) => {
-                const colors = ['#94a3b8','#f59e0b','#cd7f32']
-                const emojis = ['🥈','🥇','🥉']
-                const heights = ['85px','100px','75px']
-                const val = sortBy === 'exact' ? p.exact_scores : sortBy === 'accuracy' ? `${p.predictions_made > 0 ? Math.round(p.correct_results/p.predictions_made*100) : 0}%` : p.total_points
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', alignItems: 'flex-end' }}>
+              {[
+                { p: sorted[1], color: '#94a3b8', emoji: '🥈', size: 32, pt: '12px 8px' },
+                { p: sorted[0], color: '#f59e0b', emoji: '🥇', size: 38, pt: '16px 8px' },
+                { p: sorted[2], color: '#cd7f32', emoji: '🥉', size: 28, pt: '10px 8px' },
+              ].map(({ p, color, emoji, size, pt }, i) => {
+                const val = sortBy === 'exact' ? p.exact_scores
+                  : sortBy === 'accuracy' ? `${p.predictions_made > 0 ? Math.round(p.correct_results/p.predictions_made*100) : 0}%`
+                  : p.total_points
                 return (
-                  <Link key={p.id} href={`/profile/${p.username}`} style={{ textDecoration: 'none' }}>
+                  <Link key={p.id} href={`/profile/${p.username}`} style={{ textDecoration: 'none', flex: 1, minWidth: 0 }}>
                     <div style={{
-                      background: '#12121a', border: `1px solid ${colors[i]}44`,
-                      borderRadius: '12px', padding: '10px 6px', textAlign: 'center',
-                      height: heights[i], overflow: 'hidden', minWidth: 0,
-                      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                      background: '#12121a', border: `1px solid ${color}44`,
+                      borderRadius: '12px', padding: pt, textAlign: 'center',
+                      boxShadow: i === 1 ? `0 0 16px ${color}22` : 'none',
                     }}>
-                      <div style={{ fontSize: '20px', marginBottom: '4px' }}>{emojis[i]}</div>
-                      <Avatar profile={p} size={34} />
-                      <div style={{ fontWeight: 700, fontSize: '11px', color: '#f0f0f5', margin: '4px 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%', padding: '0 4px' }}>{p.username}</div>
-                      <div style={{ color: colors[i], fontWeight: 900, fontSize: '1rem' }}>{val}</div>
-                      <div style={{ color: '#6b7280', fontSize: '10px' }}>{sortBy === 'exact' ? 'exactos' : sortBy === 'accuracy' ? 'precisión' : 'pts'}</div>
+                      <div style={{ fontSize: i === 1 ? '24px' : '18px', marginBottom: '6px' }}>{emoji}</div>
+                      <Avatar profile={p} size={size} />
+                      <div style={{
+                        fontWeight: 700, fontSize: '11px', color: '#f0f0f5',
+                        margin: '6px 0 2px', overflow: 'hidden', textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap', padding: '0 2px',
+                      }}>{p.username}</div>
+                      <div style={{ color, fontWeight: 900, fontSize: i === 1 ? '1.2rem' : '1rem' }}>{val}</div>
+                      <div style={{ color: '#6b7280', fontSize: '10px' }}>
+                        {sortBy === 'exact' ? 'exactos' : sortBy === 'accuracy' ? 'precisión' : 'pts'}
+                      </div>
                     </div>
                   </Link>
                 )
