@@ -381,8 +381,9 @@ export default function DashboardClient({ profile, upcomingMatches, recentPredic
       {/* ═══ ACCESOS RÁPIDOS ═══ */}
       <div>
         <h2 style={{ margin: '0 0 10px', fontSize: '13px', fontWeight: 900, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Accesos Rápidos</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
           {[
+            { href: '/fixture', emoji: '🗓️', label: 'Fixture', desc: 'Bracket y grupos', grad: 'linear-gradient(135deg,#001a3d,#003087)', border: '#75aadb44' },
             { href: '/predict/bonus', emoji: '🌟', label: 'Bonus', desc: 'Campeón y goleador', grad: 'linear-gradient(135deg,#1a1200,#2a1f00)', border: '#f59e0b33' },
             { href: '/ranking', emoji: '🏅', label: 'Ranking', desc: 'Tabla global', grad: 'linear-gradient(135deg,#001a4d,#003087)', border: '#3b82f633' },
             { href: '/profile', emoji: '🏆', label: 'Logros', desc: 'Mis badges', grad: 'linear-gradient(135deg,#0a1a0a,#0f2e0f)', border: '#10b98133' },
