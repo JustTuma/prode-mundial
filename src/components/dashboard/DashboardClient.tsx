@@ -223,24 +223,6 @@ export default function DashboardClient({ profile, upcomingMatches, recentPredic
             ))}
           </div>
 
-          {/* Barra precisión */}
-          {profile?.predictions_made > 0 && (
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px' }}>Precisión general</span>
-                <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px' }}>{profile.predictions_made} predicciones</span>
-              </div>
-              <div style={{ background: 'rgba(0,0,0,0.4)', borderRadius: '99px', height: '6px' }}>
-                <div style={{
-                  background: 'linear-gradient(90deg, #fbbf24, #f59e0b)',
-                  borderRadius: '99px', height: '100%',
-                  width: mounted ? `${accuracy}%` : '0%',
-                  transition: 'width 1.2s ease',
-                  boxShadow: '0 0 10px rgba(251,191,36,0.7)',
-                }} />
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
