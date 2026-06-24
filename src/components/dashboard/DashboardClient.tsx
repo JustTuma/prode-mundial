@@ -1,514 +1,213 @@
 'use client'
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { formatDate } from '@/lib/utils'
+import TeamAvatar from '@/components/ui/TeamAvatar'
+import { personColor } from '@/lib/teams'
 
 interface Props {
   profile: any
-  upcomingMatches: any[]
-  recentPredictions: any[]
+  nextMatch: any
   liveMatches: any[]
   rank: number
-  accuracy: number
-  weeklyWinner?: { id: string; username: string; avatar_url: string | null; points: number } | null
+  myPoints: number
+  myExact: number
+  pointsToLeader: number
+  top4: { pos: number; username: string; avatar_url: string | null; points: number; isYou: boolean }[]
+  wallPosts: any[]
+  weeklyWinner: { id: string; username: string; avatar_url: string | null; points: number } | null
+  userId: string
 }
 
-// Countdown al próximo domingo 23:59
-function WeeklyCountdown() {
-  const [timeLeft, setTimeLeft] = useState({ d: 0, h: 0, m: 0, s: 0 })
-  const [isOver, setIsOver] = useState(false)
-
+function useCountdown(dateStr: string | null) {
+  const [cd, setCd] = useState('')
   useEffect(() => {
-    const calc = () => {
-      const now = new Date()
-      const sunday = new Date(now)
-      const dayOfWeek = now.getDay()
-      const daysUntilSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek
-      sunday.setDate(now.getDate() + daysUntilSunday)
-      sunday.setHours(23, 59, 59, 0)
-      const diff = sunday.getTime() - now.getTime()
-      if (diff <= 0) { setIsOver(true); return }
-      setTimeLeft({
-        d: Math.floor(diff / 86400000),
-        h: Math.floor((diff % 86400000) / 3600000),
-        m: Math.floor((diff % 3600000) / 60000),
-        s: Math.floor((diff % 60000) / 1000),
-      })
+    if (!dateStr) return
+    const tick = () => {
+      const ms = new Date(dateStr).getTime() - Date.now()
+      if (ms <= 0) { setCd('¡En juego!'); return }
+      const d = Math.floor(ms / 86400000), h = Math.floor(ms / 3600000) % 24
+      const m = Math.floor(ms / 60000) % 60, s = Math.floor(ms / 1000) % 60
+      const p = (n: number) => String(n).padStart(2, '0')
+      setCd((d > 0 ? d + 'd ' : '') + p(h) + 'h ' + p(m) + 'm ' + p(s) + 's')
     }
-    calc()
-    const t = setInterval(calc, 1000)
+    tick()
+    const t = setInterval(tick, 1000)
     return () => clearInterval(t)
-  }, [])
-
-  const pad = (n: number) => String(n).padStart(2, '0')
-
-  if (isOver) return <span style={{ color: '#10b981', fontWeight: 700, fontSize: '13px' }}>¡Terminó esta semana!</span>
-
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-      {timeLeft.d > 0 && (
-        <>
-          <span style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '6px', padding: '2px 6px', fontWeight: 900, fontSize: '13px', color: '#fff', fontVariantNumeric: 'tabular-nums' }}>{timeLeft.d}d</span>
-          <span style={{ color: 'rgba(255,255,255,0.4)' }}>:</span>
-        </>
-      )}
-      {[timeLeft.h, timeLeft.m, timeLeft.s].map((v, i) => (
-        <span key={i} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-          <span style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '6px', padding: '2px 6px', fontWeight: 900, fontSize: '13px', color: '#fff', fontVariantNumeric: 'tabular-nums', minWidth: '28px', textAlign: 'center' }}>{pad(v)}</span>
-          {i < 2 && <span style={{ color: 'rgba(255,255,255,0.4)', fontWeight: 900 }}>:</span>}
-        </span>
-      ))}
-    </div>
-  )
+  }, [dateStr])
+  return cd
 }
 
-// Contador animado
-function AnimatedNumber({ target, duration = 1500, suffix = '' }: { target: number | string; duration?: number; suffix?: string }) {
-  const [display, setDisplay] = useState(0)
-  const isNumber = typeof target === 'number'
-
-  useEffect(() => {
-    if (!isNumber) return
-    let start = 0
-    const step = target / (duration / 16)
-    const timer = setInterval(() => {
-      start += step
-      if (start >= target) { setDisplay(target); clearInterval(timer) }
-      else setDisplay(Math.floor(start))
-    }, 16)
-    return () => clearInterval(timer)
-  }, [target, duration, isNumber])
-
-  if (!isNumber) return <>{target}</>
-  return <>{display}{suffix}</>
+function timeAgo(dateStr: string) {
+  const diff = Date.now() - new Date(dateStr).getTime()
+  const m = Math.floor(diff / 60000)
+  if (m < 1) return 'ahora'
+  if (m < 60) return `hace ${m}m`
+  const h = Math.floor(m / 60)
+  if (h < 24) return `hace ${h}h`
+  return `hace ${Math.floor(h / 24)}d`
 }
 
-// Countdown al próximo partido
-function Countdown({ date }: { date: string }) {
-  const [timeLeft, setTimeLeft] = useState({ h: 0, m: 0, s: 0 })
-
-  useEffect(() => {
-    const calc = () => {
-      const diff = new Date(date).getTime() - Date.now()
-      if (diff <= 0) return
-      setTimeLeft({
-        h: Math.floor(diff / 3600000),
-        m: Math.floor((diff % 3600000) / 60000),
-        s: Math.floor((diff % 60000) / 1000),
-      })
-    }
-    calc()
-    const t = setInterval(calc, 1000)
-    return () => clearInterval(t)
-  }, [date])
-
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-      {[timeLeft.h, timeLeft.m, timeLeft.s].map((v, i) => (
-        <span key={i} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-          <span style={{
-            background: 'rgba(0,0,0,0.4)', borderRadius: '6px', padding: '3px 6px',
-            fontWeight: 900, fontSize: '15px', color: '#fff', fontVariantNumeric: 'tabular-nums',
-            minWidth: '28px', textAlign: 'center',
-          }}>{pad(v)}</span>
-          {i < 2 && <span style={{ color: 'rgba(255,255,255,0.5)', fontWeight: 900 }}>:</span>}
-        </span>
-      ))}
-    </div>
-  )
-}
-
-// Confetti canvas
-function Confetti() {
-  const ref = useRef<HTMLCanvasElement>(null)
-  useEffect(() => {
-    const canvas = ref.current
-    if (!canvas) return
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-    canvas.width = canvas.offsetWidth
-    canvas.height = canvas.offsetHeight
-
-    const colors = ['#75aadb','#ffffff','#f59e0b','#fbbf24','#003087','#0050c8']
-    const particles = Array.from({ length: 80 }, () => ({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height - canvas.height,
-      w: Math.random() * 8 + 4,
-      h: Math.random() * 4 + 2,
-      color: colors[Math.floor(Math.random() * colors.length)],
-      speed: Math.random() * 2 + 1,
-      angle: Math.random() * Math.PI * 2,
-      spin: (Math.random() - 0.5) * 0.15,
-      opacity: Math.random() * 0.7 + 0.3,
-    }))
-
-    let frame = 0
-    const animate = () => {
-      if (frame > 180) return
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-      particles.forEach(p => {
-        p.y += p.speed
-        p.angle += p.spin
-        p.opacity -= 0.003
-        if (p.opacity <= 0) return
-        ctx.save()
-        ctx.globalAlpha = p.opacity
-        ctx.translate(p.x + p.w/2, p.y + p.h/2)
-        ctx.rotate(p.angle)
-        ctx.fillStyle = p.color
-        ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h)
-        ctx.restore()
-      })
-      frame++
-      requestAnimationFrame(animate)
-    }
-    animate()
-  }, [])
+export default function DashboardClient({ profile, nextMatch, liveMatches, rank, myPoints, myExact, pointsToLeader, top4, wallPosts, weeklyWinner, userId }: Props) {
+  const cd = useCountdown(nextMatch?.match_date)
+  const progress = rank === 1 ? 100 : Math.max(8, Math.min(95, Math.round((myPoints / (myPoints + pointsToLeader || 1)) * 100)))
 
   return (
-    <canvas ref={ref} style={{
-      position: 'absolute', inset: 0, width: '100%', height: '100%',
-      pointerEvents: 'none', borderRadius: '20px',
-    }} />
-  )
-}
+    <div className="risein">
+      {/* HERO */}
+      <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '24px', padding: '20px', background: 'var(--grad)', boxShadow: 'var(--shadow)', color: '#fff', marginTop: '4px' }}>
+        <div style={{ position: 'absolute', right: '-34px', top: '-34px', width: '150px', height: '150px', borderRadius: '50%', background: 'rgba(255,255,255,.13)' }} />
+        <div style={{ position: 'absolute', right: '38px', bottom: '-54px', width: '96px', height: '96px', borderRadius: '50%', background: 'rgba(255,255,255,.09)' }} />
+        <div style={{ position: 'relative' }}>
+          <div style={{ fontSize: '13px', fontWeight: 600, opacity: .92 }}>Hola, {profile?.username} · tu posición</div>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: '16px', marginTop: '4px' }}>
+            <div className="font-display" style={{ fontSize: '58px', lineHeight: .85 }}>#{rank || '-'}</div>
+            <div style={{ paddingBottom: '8px' }}>
+              <div className="font-display" style={{ fontSize: '28px', lineHeight: 1 }}>
+                {myPoints}<span style={{ fontSize: '14px', opacity: .85, fontFamily: 'Archivo', fontWeight: 700 }}> pts</span>
+              </div>
+              <div style={{ fontSize: '12px', opacity: .92, marginTop: '2px' }}>
+                {rank === 1 ? '¡Vas primero! 🏆' : pointsToLeader > 0 ? `a ${pointsToLeader} del 1°` : 'subí al podio'}
+              </div>
+            </div>
+          </div>
+          <div style={{ marginTop: '16px', height: '9px', borderRadius: '999px', background: 'rgba(255,255,255,.25)', overflow: 'hidden' }}>
+            <div style={{ width: `${progress}%`, height: '100%', background: 'var(--accent2)', borderRadius: '999px', transition: 'width .6s ease' }} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '9px', fontSize: '11px', fontWeight: 700, opacity: .92 }}>
+            <span>🎯 {myExact} marcadores exactos</span>
+            <span>{profile?.predictions_made || 0} pronósticos</span>
+          </div>
+        </div>
+      </div>
 
-export default function DashboardClient({ profile, upcomingMatches, recentPredictions, liveMatches, rank, accuracy, weeklyWinner }: Props) {
-  const [mounted, setMounted] = useState(false)
-  const [showConfetti] = useState(() => typeof window !== 'undefined' && sessionStorage.getItem('confetti_shown') !== '1')
-
-  useEffect(() => {
-    setMounted(true)
-    if (showConfetti) sessionStorage.setItem('confetti_shown', '1')
-  }, [showConfetti])
-
-  const greetings = ['¡Dale campeón! 🔥', '¡Vamos Argentina! 🇦🇷', '¡A romperla! ⚡', '¡Esta es la nuestra! 🏆', '¡Metele! 💪']
-  const greeting = greetings[new Date().getMinutes() % greetings.length]
-  const nextMatch = upcomingMatches[0]
-
-  return (
-    <div style={{ paddingBottom: '100px' }}>
-
-      {/* ═══ HERO BANNER ═══ */}
-      <div style={{
-        position: 'relative', borderRadius: '20px', overflow: 'hidden',
-        marginBottom: '16px', minHeight: '240px',
-        background: 'linear-gradient(160deg, #001a4d 0%, #003087 35%, #0050c8 65%, #1a6fd4 100%)',
-      }}>
-        {/* Imagen estadio */}
-        <div style={{
-          position: 'absolute', inset: 0,
-          backgroundImage: 'url(https://images.unsplash.com/photo-1489944440615-453fc2b6a9a9?w=800&q=60)',
-          backgroundSize: 'cover', backgroundPosition: 'center top',
-          opacity: 0.15,
-        }} />
-        {/* Rayas camiseta Argentina animadas */}
-        <div style={{
-          position: 'absolute', inset: 0,
-          background: 'repeating-linear-gradient(90deg, transparent 0px, transparent 22px, rgba(117,170,219,0.12) 22px, rgba(117,170,219,0.12) 44px)',
-          animation: 'none',
-        }} />
-        {/* Gradiente inferior */}
-        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '60%', background: 'linear-gradient(0deg, rgba(0,0,0,0.5) 0%, transparent 100%)' }} />
-
-        {/* Confetti al entrar */}
-        {mounted && showConfetti && <Confetti />}
-
-        {/* Estrellas campeón */}
-        <div style={{ position: 'absolute', top: '12px', left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '4px' }}>
-          {['⭐','⭐','⭐'].map((s,i) => (
-            <span key={i} style={{ fontSize: '14px', animation: `pulse ${1 + i * 0.3}s ease-in-out infinite`, filter: 'drop-shadow(0 0 4px #f59e0b)' }}>{s}</span>
+      {/* EN VIVO */}
+      {liveMatches.length > 0 && (
+        <div style={{ marginTop: '14px' }}>
+          {liveMatches.map((m: any) => (
+            <Link key={m.id} href={`/matches/${m.id}`} style={{ textDecoration: 'none' }}>
+              <div className="card" style={{ padding: '14px 16px', marginBottom: '8px', borderColor: 'var(--neg)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ width: '8px', height: '8px', background: 'var(--neg)', borderRadius: '50%' }} className="animate-pulse" />
+                    <span style={{ color: 'var(--neg)', fontWeight: 800, fontSize: '11px' }}>{m.status === 'PAUSED' ? 'PAUSA' : 'EN VIVO'}{m.minute ? ` ${m.minute}'` : ''}</span>
+                  </div>
+                  <span className="font-display" style={{ fontSize: '20px', color: 'var(--ink)' }}>{m.home_team} {m.home_score ?? 0}-{m.away_score ?? 0} {m.away_team}</span>
+                </div>
+              </div>
+            </Link>
           ))}
         </div>
-
-        <div style={{ position: 'relative', padding: '36px 20px 20px' }}>
-          {/* Top row */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-            <div>
-              <p style={{ color: 'rgba(255,255,255,0.6)', margin: '0 0 2px', fontSize: '12px', fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase' }}>
-                {greeting}
-              </p>
-              <h1 style={{ margin: 0, fontSize: '1.6rem', fontWeight: 900, color: '#fff', textShadow: '0 2px 12px rgba(0,0,0,0.5)' }}>
-                {profile?.username}
-              </h1>
-            </div>
-            {/* Avatar con borde dorado */}
-            <div style={{
-              width: '60px', height: '60px', borderRadius: '50%', flexShrink: 0,
-              background: 'linear-gradient(135deg, #f59e0b, #fbbf24)',
-              padding: '2px',
-              boxShadow: '0 0 20px rgba(245,158,11,0.5)',
-            }}>
-              <div style={{ width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden', background: '#003087' }}>
-                {profile?.avatar_url
-                  ? <img src={profile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 900, fontSize: '24px' }}>
-                      {profile?.username?.[0]?.toUpperCase()}
-                    </div>
-                }
-              </div>
-            </div>
-          </div>
-
-          {/* Stats row */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', marginBottom: '16px' }}>
-            {[
-              { emoji: '⭐', label: 'Puntos', value: profile?.total_points ?? 0, color: '#fbbf24' },
-              { emoji: '🏅', label: 'Ranking', value: rank ? `#${rank}` : '-', color: '#75aadb' },
-              { emoji: '🎯', label: 'Exactos', value: profile?.exact_scores ?? 0, color: '#10b981' },
-              { emoji: '📊', label: 'Precisión', value: accuracy, suffix: '%', color: '#a78bfa' },
-            ].map(s => (
-              <div key={s.label} style={{
-                background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(8px)',
-                borderRadius: '12px', padding: '10px 6px', textAlign: 'center',
-                border: '1px solid rgba(255,255,255,0.1)',
-              }}>
-                <div style={{ fontSize: '16px', marginBottom: '2px' }}>{s.emoji}</div>
-                <div style={{ fontWeight: 900, fontSize: '1.1rem', color: s.color }}>
-                  {mounted ? <AnimatedNumber target={typeof s.value === 'number' ? s.value : s.value as string} suffix={s.suffix} /> : s.value}
-                </div>
-                <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: '10px' }}>{s.label}</div>
-              </div>
-            ))}
-          </div>
-
-        </div>
-      </div>
-
-      {/* ═══ EN VIVO ═══ */}
-      {liveMatches.length > 0 && (
-        <div style={{ marginBottom: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-            <span style={{ width: '10px', height: '10px', background: '#ef4444', borderRadius: '50%', boxShadow: '0 0 8px #ef4444', animation: 'pulse 1s infinite' }} />
-            <h2 style={{ margin: 0, fontSize: '13px', fontWeight: 900, color: '#ef4444', textTransform: 'uppercase', letterSpacing: '1.5px' }}>En Vivo Ahora</h2>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {liveMatches.map((match: any) => (
-              <Link key={match.id} href={`/matches/${match.id}`} style={{ textDecoration: 'none' }}>
-                <div style={{
-                  background: 'linear-gradient(135deg, #1a0505, #2a0808)',
-                  border: '1px solid #ef444455', borderRadius: '14px', padding: '14px 16px',
-                  position: 'relative', overflow: 'hidden',
-                }}>
-                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: 'linear-gradient(90deg, #ef4444, #f59e0b, #ef4444)', backgroundSize: '200% 100%' }} />
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span style={{ fontWeight: 700, color: '#f0f0f5', fontSize: '14px' }}>{match.home_team}</span>
-                    <div style={{ textAlign: 'center' }}>
-                      <div style={{ fontWeight: 900, fontSize: '22px', color: '#fff' }}>
-                        {match.home_score ?? 0} <span style={{ color: '#374151' }}>-</span> {match.away_score ?? 0}
-                      </div>
-                      <div style={{ color: '#ef4444', fontSize: '10px', fontWeight: 800 }}>
-                        {match.status === 'PAUSED' ? 'PAUSA' : match.minute ? `${match.minute}'` : 'EN VIVO'}
-                      </div>
-                    </div>
-                    <span style={{ fontWeight: 700, color: '#f0f0f5', fontSize: '14px', textAlign: 'right' }}>{match.away_team}</span>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
       )}
 
-      {/* ═══ PREMIO SEMANAL ═══ */}
-      <div style={{
-        background: 'linear-gradient(135deg, #1a0a2e, #2d1b4e)',
-        border: '1px solid #7c3aed44', borderRadius: '16px',
-        padding: '16px 18px', marginBottom: '16px', position: 'relative', overflow: 'hidden',
-      }}>
-        <div style={{ position: 'absolute', top: '-20px', right: '-20px', fontSize: '80px', opacity: 0.08, transform: 'rotate(15deg)' }}>🍔</div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-              <span style={{ fontSize: '22px' }}>🍔</span>
-              <span style={{ fontWeight: 800, color: '#f0f0f5', fontSize: '15px' }}>Premio Semanal</span>
-            </div>
-            <p style={{ color: '#a78bfa', fontSize: '12px', margin: 0 }}>
-              El que más puntos sume esta semana gana una hamburguesa 🏆
-            </p>
-          </div>
-          <WeeklyCountdown />
-        </div>
-
-        {weeklyWinner && weeklyWinner.points > 0 && (
-          <div style={{ marginTop: '12px', borderTop: '1px solid #7c3aed33', paddingTop: '12px' }}>
-            {(() => {
-              const isWeekOver = new Date().getDay() === 0 && new Date().getHours() === 23
-              return isWeekOver ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <span style={{ fontSize: '20px' }}>🥇</span>
-                  <span style={{ color: '#fbbf24', fontWeight: 800, fontSize: '14px' }}>
-                    ¡{weeklyWinner.username} ganó la hamburguesa! ({weeklyWinner.points} pts)
-                  </span>
-                </div>
-              ) : (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <div style={{
-                    width: '28px', height: '28px', borderRadius: '50%', overflow: 'hidden', flexShrink: 0,
-                    background: 'linear-gradient(135deg,#7c3aed,#a855f7)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>
-                    {weeklyWinner.avatar_url
-                      ? <img src={weeklyWinner.avatar_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
-                      : <span style={{ color: '#fff', fontWeight: 700, fontSize: '11px' }}>{weeklyWinner.username?.[0]?.toUpperCase()}</span>
-                    }
-                  </div>
-                  <div>
-                    <span style={{ color: '#c4b5fd', fontSize: '12px' }}>Va ganando: </span>
-                    <span style={{ color: '#f0f0f5', fontWeight: 700, fontSize: '13px' }}>{weeklyWinner.username}</span>
-                    <span style={{ color: '#a78bfa', fontSize: '12px' }}> con {weeklyWinner.points} pts</span>
-                  </div>
-                  <Link href="/ranking" style={{ textDecoration: 'none', marginLeft: 'auto', flexShrink: 0 }}>
-                    <span style={{ color: '#a78bfa', fontSize: '11px', fontWeight: 600 }}>Ver ranking →</span>
-                  </Link>
-                </div>
-              )
-            })()}
-          </div>
-        )}
-      </div>
-
-      {/* ═══ PRÓXIMO PARTIDO + COUNTDOWN ═══ */}
+      {/* PRÓXIMO PARTIDO */}
       {nextMatch && (
-        <div style={{ marginBottom: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-            <h2 style={{ margin: 0, fontSize: '13px', fontWeight: 900, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>⏱ Próximo Partido</h2>
-            <Link href="/matches" style={{ color: '#75aadb', fontSize: '12px', textDecoration: 'none', fontWeight: 600 }}>Ver todos →</Link>
+        <div className="card" style={{ marginTop: '14px', padding: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '.7px' }}>Próximo partido</span>
+            <span style={{ fontSize: '12px', color: 'var(--muted)', fontWeight: 700 }}>
+              {new Date(nextMatch.match_date).toLocaleDateString('es-AR', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'America/Argentina/Buenos_Aires' })}
+            </span>
           </div>
-          <Link href={`/matches/${nextMatch.id}`} style={{ textDecoration: 'none' }}>
-            <div style={{
-              background: 'linear-gradient(135deg, #003087, #0050c8)',
-              borderRadius: '16px', padding: '18px', position: 'relative', overflow: 'hidden',
-            }}>
-              <div style={{ position: 'absolute', inset: 0, background: 'repeating-linear-gradient(90deg, transparent 0px, transparent 20px, rgba(255,255,255,0.04) 20px, rgba(255,255,255,0.04) 40px)' }} />
-              <div style={{ position: 'relative' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
-                  <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', fontWeight: 600 }}>{nextMatch.group_name || nextMatch.stage}</span>
-                  <Countdown date={nextMatch.match_date} />
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
-                    {nextMatch.home_team_flag
-                      ? <img src={nextMatch.home_team_flag} style={{ width: '48px', height: '34px', objectFit: 'contain' }} alt="" />
-                      : <span style={{ fontSize: '32px' }}>🏳️</span>
-                    }
-                    <span style={{ fontWeight: 700, color: '#fff', fontSize: '13px', textAlign: 'center' }}>{nextMatch.home_team}</span>
-                  </div>
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontWeight: 900, fontSize: '20px', color: 'rgba(255,255,255,0.4)' }}>VS</div>
-                    <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', marginTop: '4px' }}>
-                      {new Date(nextMatch.match_date).toLocaleDateString('es-AR', { day: 'numeric', month: 'short', timeZone: 'America/Argentina/Buenos_Aires' })}
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
-                    {nextMatch.away_team_flag
-                      ? <img src={nextMatch.away_team_flag} style={{ width: '48px', height: '34px', objectFit: 'contain' }} alt="" />
-                      : <span style={{ fontSize: '32px' }}>🏳️</span>
-                    }
-                    <span style={{ fontWeight: 700, color: '#fff', fontSize: '13px', textAlign: 'center' }}>{nextMatch.away_team}</span>
-                  </div>
-                </div>
-                <Link href={`/matches/${nextMatch.id}`} onClick={e => e.stopPropagation()} style={{ textDecoration: 'none' }}>
-                  <div style={{
-                    marginTop: '14px', background: 'rgba(255,255,255,0.15)', borderRadius: '10px',
-                    padding: '10px', textAlign: 'center', color: '#fff', fontWeight: 700, fontSize: '13px',
-                    border: '1px solid rgba(255,255,255,0.2)',
-                  }}>
-                    🎯 Predecir este partido
-                  </div>
-                </Link>
-              </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-around', marginTop: '16px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', width: '96px' }}>
+              <TeamAvatar name={nextMatch.home_team} code={nextMatch.home_team_code} flag={nextMatch.home_team_flag} size={52} />
+              <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--ink)', textAlign: 'center' }}>{nextMatch.home_team}</span>
             </div>
+            <span className="font-display" style={{ fontSize: '20px', color: 'var(--muted)' }}>VS</span>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', width: '96px' }}>
+              <TeamAvatar name={nextMatch.away_team} code={nextMatch.away_team_code} flag={nextMatch.away_team_flag} size={52} />
+              <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--ink)', textAlign: 'center' }}>{nextMatch.away_team}</span>
+            </div>
+          </div>
+          <div className="font-display" style={{ marginTop: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', background: 'var(--surface2)', borderRadius: '14px', padding: '11px', fontSize: '21px', color: 'var(--ink)', letterSpacing: '1px' }}>{cd}</div>
+          <Link href={`/matches/${nextMatch.id}`} style={{ textDecoration: 'none' }}>
+            <button className="btn-accent" style={{ marginTop: '12px' }}>Cargar mi pronóstico</button>
           </Link>
         </div>
       )}
 
-      {/* ═══ MIS PREDICCIONES ═══ */}
-      <div style={{ marginBottom: '16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-          <h2 style={{ margin: 0, fontSize: '13px', fontWeight: 900, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>🎯 Últimas Predicciones</h2>
-          <Link href="/matches" style={{ color: '#75aadb', fontSize: '12px', textDecoration: 'none', fontWeight: 600 }}>Predecir →</Link>
-        </div>
-        {recentPredictions.length === 0 ? (
-          <div style={{
-            background: 'linear-gradient(135deg, #0a1a0a, #121a12)',
-            border: '1px solid #10b98133', borderRadius: '14px', padding: '28px', textAlign: 'center',
-          }}>
-            <div style={{ fontSize: '40px', marginBottom: '10px' }}>⚽</div>
-            <p style={{ color: '#94a3b8', margin: '0 0 14px', fontWeight: 600 }}>¡Todavía no predijiste nada!</p>
-            <Link href="/matches">
-              <button style={{ background: 'linear-gradient(135deg,#003087,#0050c8)', color: '#fff', fontWeight: 700, padding: '10px 24px', borderRadius: '10px', border: 'none', cursor: 'pointer', fontSize: '14px' }}>
-                ⚽ Empezar a predecir
-              </button>
-            </Link>
+      {/* ACCESOS: Fixture / Bracket */}
+      <div style={{ marginTop: '14px', display: 'flex', gap: '12px' }}>
+        <Link href="/fixture" style={{ flex: 1, textDecoration: 'none' }}>
+          <div className="card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '9px' }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 9h18M3 14.5h18M9 4v16" /></svg>
+            <span className="font-display" style={{ fontSize: '15px', color: 'var(--ink)' }}>Fixture</span>
+            <span style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: 600 }}>Grupos y posiciones</span>
           </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {recentPredictions.map((pred: any) => {
-              const match = pred.matches
-              const isFinished = match?.status === 'FINISHED'
-              const borderColor = pred.is_exact ? '#f59e0b' : pred.is_correct_result ? '#10b981' : isFinished ? '#ef4444' : '#2a2a3e'
-              const bgColor = pred.is_exact ? 'rgba(245,158,11,0.06)' : pred.is_correct_result ? 'rgba(16,185,129,0.06)' : 'transparent'
-              return (
-                <div key={pred.id} style={{
-                  background: bgColor || '#12121a', border: `1px solid ${borderColor}`,
-                  borderRadius: '12px', padding: '12px 14px',
-                  borderLeft: `3px solid ${borderColor}`,
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                    <span style={{ color: '#6b7280', fontSize: '12px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '60%' }}>
-                      {match?.home_team} vs {match?.away_team}
-                    </span>
-                    {isFinished && (
-                      <span style={{
-                        fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '99px',
-                        background: pred.is_exact ? '#f59e0b22' : pred.is_correct_result ? '#10b98122' : '#ef444422',
-                        color: pred.is_exact ? '#f59e0b' : pred.is_correct_result ? '#10b981' : '#ef4444',
-                      }}>
-                        {pred.is_exact ? '🎯 Exacto' : pred.is_correct_result ? '✅ Correcto' : '❌ Error'}
-                      </span>
-                    )}
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ color: '#f0f0f5', fontWeight: 800, fontSize: '18px' }}>
-                      {pred.home_score_pred} - {pred.away_score_pred}
-                    </span>
-                    {isFinished && <span style={{ color: '#6b7280', fontSize: '12px' }}>(real: {match.home_score}-{match.away_score})</span>}
-                    {isFinished && pred.points_earned > 0 && (
-                      <span style={{ color: '#f59e0b', fontWeight: 800, marginLeft: 'auto', fontSize: '15px' }}>+{pred.points_earned} pts</span>
-                    )}
-                  </div>
-                </div>
-              )
-            })}
+        </Link>
+        <Link href="/fixture?tab=bracket" style={{ flex: 1, textDecoration: 'none' }}>
+          <div className="card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '9px' }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent2)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 5h5v6h4M4 11h5M4 13h5v6h4M13 11h4v2h0M17 11V7M17 13v4" /></svg>
+            <span className="font-display" style={{ fontSize: '15px', color: 'var(--ink)' }}>Bracket</span>
+            <span style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: 600 }}>Camino a la final</span>
           </div>
-        )}
+        </Link>
       </div>
 
-      {/* ═══ ACCESOS RÁPIDOS ═══ */}
-      <div>
-        <h2 style={{ margin: '0 0 10px', fontSize: '13px', fontWeight: 900, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Accesos Rápidos</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
-          {[
-            { href: '/fixture', emoji: '🗓️', label: 'Fixture', desc: 'Bracket y grupos', grad: 'linear-gradient(135deg,#001a3d,#003087)', border: '#75aadb44' },
-            { href: '/predict/bonus', emoji: '🌟', label: 'Bonus', desc: 'Campeón y goleador', grad: 'linear-gradient(135deg,#1a1200,#2a1f00)', border: '#f59e0b33' },
-            { href: '/ranking', emoji: '🏅', label: 'Ranking', desc: 'Tabla global', grad: 'linear-gradient(135deg,#001a4d,#003087)', border: '#3b82f633' },
-            { href: '/profile', emoji: '🏆', label: 'Logros', desc: 'Mis badges', grad: 'linear-gradient(135deg,#0a1a0a,#0f2e0f)', border: '#10b98133' },
-          ].map(a => (
-            <Link key={a.href} href={a.href} style={{ textDecoration: 'none' }}>
-              <div style={{
-                background: a.grad, border: `1px solid ${a.border}`,
-                borderRadius: '14px', padding: '16px 10px', textAlign: 'center', cursor: 'pointer',
-                transition: 'transform 0.15s',
-              }}>
-                <div style={{ fontSize: '26px', marginBottom: '6px' }}>{a.emoji}</div>
-                <div style={{ fontWeight: 700, color: '#f0f0f5', fontSize: '13px' }}>{a.label}</div>
-                <div style={{ color: '#6b7280', fontSize: '10px', marginTop: '2px' }}>{a.desc}</div>
-              </div>
-            </Link>
-          ))}
+      {/* PREMIO SEMANAL */}
+      <div className="card" style={{ marginTop: '14px', padding: '14px 16px', background: 'var(--grad)', border: 'none', color: '#fff' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '20px' }}>🍔</span>
+              <span style={{ fontWeight: 800, fontSize: '14px' }}>Premio semanal</span>
+            </div>
+            <p style={{ fontSize: '12px', opacity: .9, margin: '2px 0 0' }}>El que más puntos sume gana una hamburguesa</p>
+          </div>
+          {weeklyWinner && weeklyWinner.points > 0 && (
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: '11px', opacity: .85 }}>va ganando</div>
+              <div style={{ fontWeight: 800, fontSize: '13px' }}>{weeklyWinner.username} · {weeklyWinner.points} pts</div>
+            </div>
+          )}
         </div>
+      </div>
+
+      {/* TOP DE TUS AMIGOS */}
+      <div style={{ marginTop: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span className="font-display" style={{ fontSize: '19px', color: 'var(--ink)' }}>Top de tus amigos</span>
+        <Link href="/ranking" style={{ color: 'var(--accent)', fontWeight: 800, fontSize: '13px', textDecoration: 'none' }}>Ver ranking</Link>
+      </div>
+      <div className="card" style={{ marginTop: '10px', padding: '2px 14px' }}>
+        {top4.map((item, i) => (
+          <Link key={item.username + i} href={`/profile/${item.username}`} style={{ textDecoration: 'none' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 2px', borderBottom: i < top4.length - 1 ? '1px solid var(--line)' : 'none' }}>
+              <span className="font-display" style={{ width: '16px', fontSize: '15px', color: 'var(--muted)' }}>{item.pos}</span>
+              <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: personColor(item.username), color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Anton', fontSize: '13px', overflow: 'hidden' }}>
+                {item.avatar_url ? <img src={item.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : item.username?.[0]?.toUpperCase()}
+              </div>
+              <span style={{ flex: 1, fontSize: '13px', fontWeight: item.isYou ? 900 : 600, color: 'var(--ink)' }}>{item.username}{item.isYou && ' (vos)'}</span>
+              <span className="font-display" style={{ fontSize: '16px', color: 'var(--ink)', minWidth: '34px', textAlign: 'right' }}>{item.points}</span>
+            </div>
+          </Link>
+        ))}
+        {top4.length === 0 && <div style={{ padding: '20px 0', textAlign: 'center', color: 'var(--muted)', fontSize: '13px' }}>Todavía sin jugadores</div>}
+      </div>
+
+      {/* ACTIVIDAD */}
+      <div style={{ marginTop: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span className="font-display" style={{ fontSize: '19px', color: 'var(--ink)' }}>Actividad</span>
+        <Link href="/social" style={{ color: 'var(--accent)', fontWeight: 800, fontSize: '13px', textDecoration: 'none' }}>Ver todo</Link>
+      </div>
+      <div className="card" style={{ marginTop: '6px', padding: '2px 14px' }}>
+        {wallPosts.length === 0 ? (
+          <div style={{ padding: '20px 0', textAlign: 'center', color: 'var(--muted)', fontSize: '13px' }}>
+            Sin actividad todavía · <Link href="/social" style={{ color: 'var(--accent)' }}>escribí algo</Link>
+          </div>
+        ) : wallPosts.map((post: any, i: number) => {
+          const p = post.profiles
+          return (
+            <div key={post.id} style={{ display: 'flex', gap: '12px', padding: '13px 0', borderBottom: i < wallPosts.length - 1 ? '1px solid var(--line)' : 'none' }}>
+              <div style={{ flexShrink: 0, width: '38px', height: '38px', borderRadius: '50%', background: personColor(p?.username), display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontFamily: 'Anton', fontSize: '15px', overflow: 'hidden' }}>
+                {p?.avatar_url ? <img src={p.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : p?.username?.[0]?.toUpperCase()}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: '13px', color: 'var(--ink)', lineHeight: 1.4 }}><b style={{ fontWeight: 800 }}>{p?.username}</b> {post.content}</div>
+                <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '3px' }}>{timeAgo(post.created_at)}</div>
+              </div>
+            </div>
+          )
+        })}
       </div>
     </div>
   )

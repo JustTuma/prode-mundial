@@ -21,11 +21,26 @@ export const metadata: Metadata = {
   },
 };
 
+// Avoid theme flash: apply saved theme before paint
+const themeScript = `
+(function(){
+  try {
+    var t = localStorage.getItem('prode_theme') || 'noche';
+    document.documentElement.setAttribute('data-theme', t);
+  } catch(e) {
+    document.documentElement.setAttribute('data-theme', 'noche');
+  }
+})();
+`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es">
+    <html lang="es" data-theme="noche">
       <head>
-        <meta name="theme-color" content="#003087" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+        <meta name="theme-color" content="#0B1220" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -33,8 +48,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/manifest.json" />
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body style={{ margin: 0, minHeight: '100vh' }}>{children}</body>
+      <body>{children}</body>
     </html>
   );
 }

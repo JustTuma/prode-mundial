@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import TeamAvatar from '@/components/ui/TeamAvatar'
 import type { Prediction } from '@/lib/types'
 
 interface Props {
@@ -13,19 +14,13 @@ interface Props {
   existingPrediction: Prediction | null
 }
 
-function AdjustBtn({ onClick, label }: { onClick: () => void; label: string }) {
+function Stepper({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   return (
-    <button type="button" onClick={onClick} style={{
-      background: '#1e1e2e', border: 'none', borderRadius: '10px',
-      width: '44px', height: '44px', color: '#f0f0f5', fontSize: '22px',
-      cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontWeight: 300, transition: 'background 0.15s', flexShrink: 0,
-    }}
-      onMouseEnter={e => (e.currentTarget.style.background = '#2a2a3e')}
-      onMouseLeave={e => (e.currentTarget.style.background = '#1e1e2e')}
-    >
-      {label}
-    </button>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
+      <button type="button" onClick={() => onChange(Math.max(0, value - 1))} style={{ width: '32px', height: '32px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--surface2)', color: 'var(--ink)', fontSize: '22px', fontWeight: 700, cursor: 'pointer', lineHeight: 0 }}>−</button>
+      <span className="font-display" style={{ fontSize: '30px', minWidth: '24px', textAlign: 'center', color: 'var(--ink)' }}>{value}</span>
+      <button type="button" onClick={() => onChange(Math.min(20, value + 1))} style={{ width: '32px', height: '32px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--surface2)', color: 'var(--ink)', fontSize: '20px', fontWeight: 700, cursor: 'pointer', lineHeight: 0 }}>+</button>
+    </div>
   )
 }
 
@@ -34,123 +29,41 @@ export default function PredictionForm({ matchId, homeTeam, awayTeam, homeFlag, 
   const [away, setAway] = useState<number>(existingPrediction?.away_score_pred ?? 0)
   const [loading, setLoading] = useState(false)
   const [saved, setSaved] = useState(false)
-  const [error, setError] = useState('')
   const router = useRouter()
   const supabase = createClient()
-
-  function adjust(team: 'home' | 'away', delta: number) {
-    if (team === 'home') setHome(v => Math.max(0, v + delta))
-    else setAway(v => Math.max(0, v + delta))
-  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
-    setError('')
-
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { setError('No autenticado'); setLoading(false); return }
-
-    const { error: err } = await supabase.from('predictions').upsert({
-      user_id: user.id,
-      match_id: matchId,
-      home_score_pred: home,
-      away_score_pred: away,
+    if (!user) { setLoading(false); return }
+    await supabase.from('predictions').upsert({
+      user_id: user.id, match_id: matchId, home_score_pred: home, away_score_pred: away,
     }, { onConflict: 'user_id,match_id' })
-
-    if (err) { setError(err.message); setLoading(false); return }
     setSaved(true)
     setLoading(false)
-    setTimeout(() => setSaved(false), 2500)
+    setTimeout(() => setSaved(false), 2000)
     router.refresh()
   }
 
-  const isEdit = !!existingPrediction
-
-  // Color del resultado predicho
-  const resultColor = home > away ? '#3b82f6' : home < away ? '#8b5cf6' : '#6b7280'
-  const resultLabel = home > away ? `Gana ${homeTeam}` : home < away ? `Gana ${awayTeam}` : 'Empate'
-
   return (
-    <form onSubmit={handleSubmit} style={{
-      background: '#12121a', border: '1px solid #1e1e2e', borderRadius: '16px', padding: '24px',
-    }}>
-
-      {/* Score picker */}
-      <div style={{
-        display: 'grid', gridTemplateColumns: '1fr auto 1fr',
-        alignItems: 'center', gap: '12px', marginBottom: '20px',
-      }}>
-
-        {/* Local */}
+    <form onSubmit={handleSubmit} className="card" style={{ padding: '20px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'flex-start', gap: '6px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
-          {homeFlag
-            ? <img src={homeFlag} style={{ width: '40px', height: '28px', objectFit: 'contain', borderRadius: '3px' }} alt="" />
-            : <span style={{ fontSize: '28px' }}>🏳️</span>
-          }
-          <div style={{ fontWeight: 700, color: '#f0f0f5', fontSize: '13px', textAlign: 'center' }}>{homeTeam}</div>
-          <AdjustBtn onClick={() => adjust('home', 1)} label="+" />
-          <div style={{
-            width: '64px', height: '64px', borderRadius: '12px',
-            background: '#0a0a0f', border: '2px solid #2a2a3e',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '2rem', fontWeight: 900, color: '#fff',
-          }}>
-            {home}
-          </div>
-          <AdjustBtn onClick={() => adjust('home', -1)} label="−" />
+          <TeamAvatar name={homeTeam} flag={homeFlag} size={46} />
+          <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--ink)', textAlign: 'center' }}>{homeTeam}</span>
+          <Stepper value={home} onChange={setHome} />
         </div>
-
-        {/* Centro */}
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ color: '#374151', fontWeight: 900, fontSize: '1.8rem', lineHeight: 1 }}>-</div>
-          <div style={{
-            marginTop: '12px', fontSize: '11px', fontWeight: 700,
-            color: resultColor, background: resultColor + '22',
-            padding: '4px 10px', borderRadius: '99px', whiteSpace: 'nowrap',
-          }}>
-            {resultLabel}
-          </div>
-        </div>
-
-        {/* Visitante */}
+        <span className="font-display" style={{ fontSize: '16px', color: 'var(--muted)', marginTop: '14px' }}>VS</span>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
-          {awayFlag
-            ? <img src={awayFlag} style={{ width: '40px', height: '28px', objectFit: 'contain', borderRadius: '3px' }} alt="" />
-            : <span style={{ fontSize: '28px' }}>🏳️</span>
-          }
-          <div style={{ fontWeight: 700, color: '#f0f0f5', fontSize: '13px', textAlign: 'center' }}>{awayTeam}</div>
-          <AdjustBtn onClick={() => adjust('away', 1)} label="+" />
-          <div style={{
-            width: '64px', height: '64px', borderRadius: '12px',
-            background: '#0a0a0f', border: '2px solid #2a2a3e',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '2rem', fontWeight: 900, color: '#fff',
-          }}>
-            {away}
-          </div>
-          <AdjustBtn onClick={() => adjust('away', -1)} label="−" />
+          <TeamAvatar name={awayTeam} flag={awayFlag} size={46} />
+          <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--ink)', textAlign: 'center' }}>{awayTeam}</span>
+          <Stepper value={away} onChange={setAway} />
         </div>
       </div>
-
-      {error && <div style={{ color: '#ef4444', fontSize: '13px', marginBottom: '12px', textAlign: 'center' }}>{error}</div>}
-
-      <button
-        type="submit"
-        style={{
-          width: '100%', padding: '14px', fontSize: '15px', fontWeight: 700,
-          borderRadius: '10px', border: 'none', cursor: loading ? 'wait' : 'pointer',
-          background: saved ? '#10b981' : 'linear-gradient(135deg, #003087, #0050c8)',
-          color: '#fff', transition: 'all 0.2s',
-        }}
-        disabled={loading}
-      >
-        {loading ? '⏳ Guardando...' : saved ? '✅ ¡Predicción guardada!' : isEdit ? '✏️ Actualizar predicción' : '🎯 Guardar predicción'}
+      <button type="submit" disabled={loading} className="btn-accent" style={{ marginTop: '16px', background: saved ? 'var(--pos)' : 'var(--accent)' }}>
+        {loading ? 'Guardando…' : saved ? '✓ ¡Guardado!' : existingPrediction ? 'Actualizar pronóstico' : 'Cargar pronóstico'}
       </button>
-
-      <p style={{ color: '#374151', fontSize: '11px', textAlign: 'center', marginTop: '10px', marginBottom: 0 }}>
-        Podés cambiar tu predicción hasta que empiece el partido
-      </p>
     </form>
   )
 }

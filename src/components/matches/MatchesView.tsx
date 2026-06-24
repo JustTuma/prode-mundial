@@ -1,197 +1,183 @@
 'use client'
 import { useState } from 'react'
-import Link from 'next/link'
-import { getStageLabel, formatDate } from '@/lib/utils'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import TeamAvatar from '@/components/ui/TeamAvatar'
 import type { Match, Prediction } from '@/lib/types'
 
-type View = 'proximos' | 'grupos'
+type Filter = 'proximos' | 'jugados'
 
-function Flag({ url, code }: { url: string | null; code: string }) {
-  if (url) return <img src={url} style={{ width: '28px', height: '20px', objectFit: 'contain', borderRadius: '2px' }} alt={code} />
-  try {
-    const flag = code.length === 2
-      ? String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65))
-      : ''
-    return <span style={{ fontSize: '20px', lineHeight: 1 }}>{flag || '🏳️'}</span>
-  } catch { return <span style={{ fontSize: '20px' }}>🏳️</span> }
+function fmtDate(d: string) {
+  return new Date(d).toLocaleDateString('es-AR', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'America/Argentina/Buenos_Aires' })
+}
+function fmtTime(d: string) {
+  return new Date(d).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Argentina/Buenos_Aires' })
 }
 
-function MatchCard({ match, pred, user }: { match: Match, pred: Prediction | undefined, user: any }) {
-  const isFinished = match.status === 'FINISHED'
-  const isLive = match.status === 'LIVE' || match.status === 'IN_PLAY' || match.status === 'PAUSED'
-  const isPast = new Date(match.match_date) < new Date()
-  const canPredict = !isFinished && !isLive && !isPast && user && !pred
-  const hasPred = !!pred && !isFinished
-
-  let bg = '#12121a', borderColor = '#1e1e2e'
-  if (isLive) { bg = '#1a0a0a'; borderColor = '#ef4444' }
-  else if (isFinished) { bg = '#0f0f0f'; borderColor = '#2a2a3e' }
-  else if (hasPred) { bg = '#12121a'; borderColor = '#f59e0b44' }
-  else if (canPredict) { bg = '#0d1a12'; borderColor = '#10b98155' }
-
+function Stepper({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   return (
-    <Link href={`/matches/${match.id}`} style={{ textDecoration: 'none' }}>
-      <div style={{
-        background: bg, border: `1px solid ${borderColor}`,
-        borderRadius: '12px', padding: '14px 16px', cursor: 'pointer',
-        position: 'relative', overflow: 'hidden',
-        opacity: isFinished && !pred ? 0.7 : 1,
-      }}>
-        {isLive && <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: 'linear-gradient(90deg, #ef4444, #f59e0b)' }} />}
-        {canPredict && <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: 'linear-gradient(90deg, #10b981, #3b82f6)' }} />}
-
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-          <span style={{ color: '#6b7280', fontSize: '11px' }}>{formatDate(match.match_date)}</span>
-          <div style={{ display: 'flex', gap: '6px' }}>
-            {isLive && (
-              <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#ef4444', fontSize: '11px', fontWeight: 700 }}>
-                <span style={{ width: '6px', height: '6px', background: '#ef4444', borderRadius: '50%', display: 'inline-block', animation: 'pulse 1.5s infinite' }} />
-                {`EN VIVO${match.minute ? ` ${match.minute}'` : ''}`}
-              </span>
-            )}
-            {isFinished && <span style={{ color: '#6b7280', fontSize: '11px', background: '#1e1e2e', padding: '2px 8px', borderRadius: '99px' }}>Finalizado</span>}
-            {canPredict && <span style={{ color: '#10b981', fontSize: '11px', fontWeight: 700, background: '#10b98122', padding: '2px 8px', borderRadius: '99px' }}>¡Predecir!</span>}
-            {hasPred && <span style={{ color: '#f59e0b', fontSize: '11px', fontWeight: 700, background: '#f59e0b22', padding: '2px 8px', borderRadius: '99px' }}>✓ Predicho</span>}
-          </div>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: '8px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Flag url={match.home_team_flag} code={match.home_team_code} />
-            <div>
-              <div style={{ fontWeight: 600, color: '#f0f0f5', fontSize: '14px', lineHeight: 1.2 }}>{match.home_team}</div>
-              <div style={{ color: '#6b7280', fontSize: '11px' }}>{match.home_team_code}</div>
-            </div>
-          </div>
-
-          <div style={{ textAlign: 'center', minWidth: '72px' }}>
-            {isFinished || isLive
-              ? <div style={{ fontWeight: 900, fontSize: '20px', color: '#f0f0f5' }}>{match.home_score ?? 0} - {match.away_score ?? 0}</div>
-              : <div style={{ fontWeight: 700, fontSize: '13px', color: '#6b7280' }}>VS</div>
-            }
-            {pred && (
-              <div style={{ fontSize: '11px', marginTop: '2px' }}>
-                <span style={{ fontWeight: 700, color: pred.is_exact ? '#f59e0b' : pred.is_correct_result ? '#10b981' : isFinished ? '#ef4444' : '#94a3b8' }}>
-                  {pred.home_score_pred}-{pred.away_score_pred}
-                </span>
-                {isFinished && pred.points_earned > 0 && <span style={{ color: '#f59e0b', fontWeight: 800 }}> +{pred.points_earned}pts</span>}
-              </div>
-            )}
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'flex-end' }}>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontWeight: 600, color: '#f0f0f5', fontSize: '14px', lineHeight: 1.2 }}>{match.away_team}</div>
-              <div style={{ color: '#6b7280', fontSize: '11px' }}>{match.away_team_code}</div>
-            </div>
-            <Flag url={match.away_team_flag} code={match.away_team_code} />
-          </div>
-        </div>
-        {match.city && <div style={{ color: '#374151', fontSize: '10px', marginTop: '8px' }}>📍 {match.city}</div>}
-      </div>
-    </Link>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
+      <button onClick={() => onChange(Math.max(0, value - 1))} style={{ width: '32px', height: '32px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--surface2)', color: 'var(--ink)', fontSize: '22px', fontWeight: 700, cursor: 'pointer', lineHeight: 0 }}>−</button>
+      <span className="font-display" style={{ fontSize: '30px', minWidth: '24px', textAlign: 'center', color: 'var(--ink)' }}>{value}</span>
+      <button onClick={() => onChange(Math.min(20, value + 1))} style={{ width: '32px', height: '32px', borderRadius: '10px', border: '1px solid var(--line)', background: 'var(--surface2)', color: 'var(--ink)', fontSize: '20px', fontWeight: 700, cursor: 'pointer', lineHeight: 0 }}>+</button>
+    </div>
   )
 }
 
-export default function MatchesView({ matches, predictions, user }: { matches: Match[], predictions: Prediction[], user: any }) {
-  const [view, setView] = useState<View>('proximos')
-  const predMap = new Map(predictions.map(p => [p.match_id, p]))
+function PredictorCard({ match, pred, userId, onSaved }: { match: Match; pred: Prediction | undefined; userId?: string; onSaved: (m: number, h: number, a: number) => void }) {
+  const [h, setH] = useState(pred?.home_score_pred ?? 0)
+  const [a, setA] = useState(pred?.away_score_pred ?? 0)
+  const [editing, setEditing] = useState(!pred)
+  const [saving, setSaving] = useState(false)
+  const supabase = createClient()
 
-  const now = new Date()
-  const stages = ['GROUP_STAGE', 'ROUND_OF_16', 'QUARTER_FINALS', 'SEMI_FINALS', 'THIRD_PLACE', 'FINAL']
-
-  // Vista próximos: todos ordenados por fecha, primero los no jugados
-  const upcomingFirst = [...matches].sort((a, b) => {
-    const aFinished = a.status === 'FINISHED'
-    const bFinished = b.status === 'FINISHED'
-    if (aFinished && !bFinished) return 1
-    if (!aFinished && bFinished) return -1
-    return new Date(a.match_date).getTime() - new Date(b.match_date).getTime()
-  })
-
-  const byStage = stages.reduce((acc, s) => {
-    const sm = matches.filter(m => m.stage === s)
-    if (sm.length) acc[s] = sm
-    return acc
-  }, {} as Record<string, Match[]>)
+  async function submit() {
+    if (!userId) return
+    setSaving(true)
+    await supabase.from('predictions').upsert({
+      user_id: userId, match_id: match.id, home_score_pred: h, away_score_pred: a,
+    }, { onConflict: 'user_id,match_id' })
+    setSaving(false)
+    setEditing(false)
+    onSaved(match.id, h, a)
+  }
 
   return (
-    <div style={{ paddingBottom: '80px' }}>
-      <h1 style={{ marginBottom: '16px', fontSize: '1.5rem', fontWeight: 800 }}>⚽ Partidos</h1>
-
-      {/* Toggle */}
-      <div style={{ display: 'flex', gap: '4px', background: '#0a0a0f', borderRadius: '10px', padding: '4px', marginBottom: '20px' }}>
-        {([['proximos', '🕐 Próximos'], ['grupos', '🗂️ Por grupos']] as const).map(([v, label]) => (
-          <button key={v} onClick={() => setView(v)} style={{
-            flex: 1, padding: '9px', borderRadius: '8px', border: 'none', cursor: 'pointer',
-            background: view === v ? '#1e1e2e' : 'transparent',
-            color: view === v ? '#f0f0f5' : '#6b7280',
-            fontWeight: view === v ? 700 : 400,
-            fontSize: '14px', transition: 'all 0.2s',
-          }}>
-            {label}
-          </button>
-        ))}
+    <div className="card" style={{ padding: '16px', marginBottom: '14px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span style={{ fontSize: '10px', fontWeight: 800, color: 'var(--accent)', background: 'var(--surface2)', padding: '4px 9px', borderRadius: '999px', letterSpacing: '.4px' }}>{match.group_name || match.stage}</span>
+        <span style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: 700 }}>{fmtDate(match.match_date)} · {fmtTime(match.match_date)} hs</span>
       </div>
 
-      {/* Leyenda */}
-      <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', flexWrap: 'wrap' }}>
-        {[
-          { color: '#0d1a12', border: '#10b98155', label: 'Podés predecir' },
-          { color: '#12121a', border: '#f59e0b44', label: 'Ya predijiste' },
-          { color: '#0f0f0f', border: '#2a2a3e', label: 'Finalizado' },
-          { color: '#1a0a0a', border: '#ef4444', label: 'En vivo' },
-        ].map(l => (
-          <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <div style={{ width: '12px', height: '12px', borderRadius: '3px', background: l.color, border: `1px solid ${l.border}` }} />
-            <span style={{ color: '#6b7280', fontSize: '11px' }}>{l.label}</span>
+      {editing ? (
+        <>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'flex-start', gap: '6px', marginTop: '16px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+              <TeamAvatar name={match.home_team} code={match.home_team_code} flag={match.home_team_flag} size={46} />
+              <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--ink)', textAlign: 'center' }}>{match.home_team}</span>
+              <Stepper value={h} onChange={setH} />
+            </div>
+            <span className="font-display" style={{ fontSize: '16px', color: 'var(--muted)', marginTop: '14px' }}>VS</span>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+              <TeamAvatar name={match.away_team} code={match.away_team_code} flag={match.away_team_flag} size={46} />
+              <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--ink)', textAlign: 'center' }}>{match.away_team}</span>
+              <Stepper value={a} onChange={setA} />
+            </div>
           </div>
-        ))}
+          <button onClick={submit} disabled={saving} className="btn-accent" style={{ marginTop: '16px', borderRadius: '13px', padding: '13px' }}>
+            {saving ? 'Guardando…' : 'Cargar pronóstico'}
+          </button>
+        </>
+      ) : (
+        <>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-around', marginTop: '14px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', width: '90px' }}>
+              <TeamAvatar name={match.home_team} code={match.home_team_code} flag={match.home_team_flag} size={46} />
+              <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--ink)', textAlign: 'center' }}>{match.home_team}</span>
+            </div>
+            <span className="font-display" style={{ fontSize: '34px', color: 'var(--ink)' }}>{h} - {a}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', width: '90px' }}>
+              <TeamAvatar name={match.away_team} code={match.away_team_code} flag={match.away_team_flag} size={46} />
+              <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--ink)', textAlign: 'center' }}>{match.away_team}</span>
+            </div>
+          </div>
+          <div style={{ marginTop: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--surface2)', borderRadius: '12px', padding: '10px 14px' }}>
+            <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--accent)' }}>✓ Pronóstico cargado</span>
+            <button onClick={() => setEditing(true)} style={{ background: 'none', border: 'none', color: 'var(--muted)', fontWeight: 800, fontSize: '12px', cursor: 'pointer', textDecoration: 'underline', fontFamily: 'Archivo' }}>Editar</button>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+export default function MatchesView({ matches, predictions, userId }: { matches: Match[]; predictions: Prediction[]; userId?: string }) {
+  const [filter, setFilter] = useState<Filter>('proximos')
+  const [toast, setToast] = useState('')
+  const [localPreds, setLocalPreds] = useState<Record<number, Prediction>>(
+    () => Object.fromEntries(predictions.map(p => [p.match_id, p]))
+  )
+  const router = useRouter()
+
+  function onSaved(matchId: number, h: number, a: number) {
+    setLocalPreds(prev => ({ ...prev, [matchId]: { ...(prev[matchId] || {}), match_id: matchId, home_score_pred: h, away_score_pred: a } as Prediction }))
+    setToast('¡Pronóstico cargado!')
+    setTimeout(() => setToast(''), 1900)
+    router.refresh()
+  }
+
+  const now = Date.now()
+  const upcoming = matches.filter(m => m.status !== 'FINISHED' && new Date(m.match_date).getTime() > now)
+    .sort((x, y) => new Date(x.match_date).getTime() - new Date(y.match_date).getTime())
+  const played = matches.filter(m => m.status === 'FINISHED')
+    .sort((x, y) => new Date(y.match_date).getTime() - new Date(x.match_date).getTime())
+
+  const chip = (f: Filter, label: string) => (
+    <button onClick={() => setFilter(f)} style={{
+      flexShrink: 0, border: '1px solid var(--line)',
+      background: filter === f ? 'var(--accent)' : 'var(--surface)',
+      color: filter === f ? 'var(--accent-ink)' : 'var(--muted)',
+      borderRadius: '999px', padding: '10px 18px', fontWeight: 800, fontSize: '13px',
+      cursor: 'pointer', fontFamily: 'Archivo', whiteSpace: 'nowrap',
+    }}>{label}</button>
+  )
+
+  return (
+    <div className="risein">
+      <h1 className="font-display" style={{ fontSize: '30px', color: 'var(--ink)', margin: '6px 0 4px' }}>Partidos</h1>
+      <p style={{ fontSize: '13px', color: 'var(--muted)', fontWeight: 600, marginBottom: '14px' }}>Resultado exacto: 3 pts · acertar ganador: 1 pt</p>
+
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', overflowX: 'auto', paddingBottom: '2px' }}>
+        {chip('proximos', 'Próximos')}
+        {chip('jugados', 'Jugados')}
       </div>
 
-      {/* Vista: Próximos */}
-      {view === 'proximos' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {upcomingFirst.map(match => (
-            <MatchCard key={match.id} match={match} pred={predMap.get(match.id)} user={user} />
-          ))}
-        </div>
+      {filter === 'proximos' && (
+        upcoming.length === 0
+          ? <div className="card" style={{ padding: '32px', textAlign: 'center', color: 'var(--muted)' }}>No hay próximos partidos</div>
+          : upcoming.map(m => <PredictorCard key={m.id} match={m} pred={localPreds[m.id]} userId={userId} onSaved={onSaved} />)
       )}
 
-      {/* Vista: Por grupos */}
-      {view === 'grupos' && Object.entries(byStage).map(([stage, stageMatches]) => (
-        <section key={stage} style={{ marginBottom: '32px' }}>
-          <h2 style={{ fontSize: '13px', fontWeight: 700, color: '#f59e0b', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px', paddingBottom: '8px', borderBottom: '1px solid #1e1e2e' }}>
-            {getStageLabel(stage)}
-          </h2>
-          {stage === 'GROUP_STAGE' ? (
-            Object.entries(
-              stageMatches.reduce((acc, m) => {
-                const g = m.group_name || 'Sin grupo'
-                if (!acc[g]) acc[g] = []
-                acc[g].push(m)
-                return acc
-              }, {} as Record<string, Match[]>)
-            ).sort(([a], [b]) => a.localeCompare(b)).map(([group, gMatches]) => (
-              <div key={group} style={{ marginBottom: '16px' }}>
-                <h3 style={{ color: '#94a3b8', fontSize: '12px', fontWeight: 600, margin: '0 0 8px', paddingLeft: '4px' }}>{group}</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {gMatches.map(match => <MatchCard key={match.id} match={match} pred={predMap.get(match.id)} user={user} />)}
+      {filter === 'jugados' && (
+        played.length === 0
+          ? <div className="card" style={{ padding: '32px', textAlign: 'center', color: 'var(--muted)' }}>Todavía no hay partidos jugados</div>
+          : played.map(m => {
+            const pred = localPreds[m.id]
+            const exacto = pred?.is_exact
+            const correct = pred?.is_correct_result
+            const tag = !pred ? 'SIN PRONÓSTICO' : exacto ? 'EXACTO' : correct ? 'RESULTADO' : 'NO ACERTÓ'
+            const tagColor = exacto ? 'var(--pos)' : correct ? 'var(--accent)' : 'var(--muted)'
+            return (
+              <div key={m.id} className="card" style={{ padding: '16px', marginBottom: '14px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: '10px', fontWeight: 800, color: 'var(--muted)', background: 'var(--surface2)', padding: '4px 9px', borderRadius: '999px' }}>{fmtDate(m.match_date)}</span>
+                  <span style={{ fontSize: '10px', fontWeight: 900, letterSpacing: '.5px', color: tagColor }}>{tag}</span>
                 </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-around', marginTop: '14px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', width: '90px' }}>
+                    <TeamAvatar name={m.home_team} code={m.home_team_code} flag={m.home_team_flag} size={44} />
+                    <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--ink)', textAlign: 'center' }}>{m.home_team}</span>
+                  </div>
+                  <span className="font-display" style={{ fontSize: '34px', color: 'var(--ink)' }}>{m.home_score} - {m.away_score}</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', width: '90px' }}>
+                    <TeamAvatar name={m.away_team} code={m.away_team_code} flag={m.away_team_flag} size={44} />
+                    <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--ink)', textAlign: 'center' }}>{m.away_team}</span>
+                  </div>
+                </div>
+                {pred && (
+                  <div style={{ marginTop: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--surface2)', borderRadius: '12px', padding: '10px 14px' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--muted)' }}>Tu pronóstico: <b style={{ color: 'var(--ink)', fontWeight: 800 }}>{pred.home_score_pred} - {pred.away_score_pred}</b></span>
+                    <span className="font-display" style={{ fontSize: '16px', color: tagColor }}>{(pred.points_earned > 0 ? '+' : '') + pred.points_earned} pts</span>
+                  </div>
+                )}
               </div>
-            ))
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {stageMatches.map(match => <MatchCard key={match.id} match={match} pred={predMap.get(match.id)} user={user} />)}
-            </div>
-          )}
-        </section>
-      ))}
+            )
+          })
+      )}
 
-      {matches.length === 0 && (
-        <div style={{ textAlign: 'center', padding: '60px 24px' }}>
-          <div style={{ fontSize: '64px', marginBottom: '16px' }}>⚽</div>
-          <p style={{ color: '#94a3b8' }}>Cargando partidos...</p>
+      {toast && (
+        <div style={{ position: 'fixed', bottom: '104px', left: '50%', transform: 'translateX(-50%)', background: 'var(--ink)', color: 'var(--bg)', padding: '12px 20px', borderRadius: '999px', fontSize: '13px', fontWeight: 800, boxShadow: '0 10px 30px rgba(0,0,0,.35)', zIndex: 200, whiteSpace: 'nowrap', animation: 'toastin .25s ease' }}>
+          {toast}
         </div>
       )}
     </div>
