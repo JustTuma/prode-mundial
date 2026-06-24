@@ -29,8 +29,8 @@ function Avatar({ profile, size = 32 }: { profile: { username: string; avatar_ur
   )
 }
 
-export default function RankingView({ ranking, weeklyRanking, userId }: {
-  ranking: Profile[]; weeklyRanking: WeeklyEntry[]; userId?: string
+export default function RankingView({ ranking, weeklyRanking, userId, weekStart }: {
+  ranking: Profile[]; weeklyRanking: WeeklyEntry[]; userId?: string; weekStart?: string
 }) {
   const [tab, setTab] = useState<Tab>('global')
   const [sortBy, setSortBy] = useState<SortBy>('points')
@@ -186,13 +186,17 @@ export default function RankingView({ ranking, weeklyRanking, userId }: {
       {/* WEEKLY RANKING */}
       {tab === 'weekly' && (
         <div>
-          <p style={{ color: '#6b7280', fontSize: '13px', marginBottom: '16px' }}>
-            Puntos ganados desde el lunes de esta semana
-          </p>
+          <div style={{ background: '#12121a', border: '1px solid #1e1e2e', borderRadius: '12px', padding: '14px 16px', marginBottom: '16px' }}>
+            <div style={{ fontWeight: 700, color: '#f0f0f5', fontSize: '13px', marginBottom: '4px' }}>📅 Ranking semanal</div>
+            <div style={{ color: '#6b7280', fontSize: '12px', lineHeight: 1.5 }}>
+              Puntos sumados en partidos que terminaron esta semana (desde el {weekStart}).
+              Si no aparecés, es porque ningún partido que predijiste terminó esta semana todavía.
+            </div>
+          </div>
           {weeklyRanking.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
               <div style={{ fontSize: '48px', marginBottom: '12px' }}>📅</div>
-              <p>Todavía no hay resultados esta semana</p>
+              <p>Todavía no terminaron partidos esta semana</p>
             </div>
           ) : (
             <div style={{ background: '#12121a', border: '1px solid #1e1e2e', borderRadius: '12px', overflow: 'hidden' }}>

@@ -48,6 +48,7 @@ async function runSync() {
           points_earned: result.points,
           is_exact: result.isExact,
           is_correct_result: result.isCorrectResult,
+          updated_at: new Date().toISOString(),
         }).eq('id', pred.id)
         affectedUsers.add(pred.user_id)
         scoredCount++
