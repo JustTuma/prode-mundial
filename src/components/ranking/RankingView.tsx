@@ -13,13 +13,13 @@ interface WeeklyEntry {
   userId: string; username: string; avatar_url: string | null; points: number; exact: number
 }
 
-function Avatar({ profile, size = 32 }: { profile: { username: string; avatar_url: string | null }; size?: number }) {
+function Avatar({ profile, size = 32, center = false }: { profile: { username: string; avatar_url: string | null }; size?: number; center?: boolean }) {
   return (
     <div style={{
       width: size, height: size, borderRadius: '50%', flexShrink: 0,
       background: 'linear-gradient(135deg, #003087, #0050c8)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      overflow: 'hidden',
+      overflow: 'hidden', margin: center ? '0 auto' : undefined,
     }}>
       {profile.avatar_url
         ? <img src={profile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -125,7 +125,7 @@ export default function RankingView({ ranking, weeklyRanking, userId, weekStart 
                       boxShadow: i === 1 ? `0 0 16px ${color}22` : 'none',
                     }}>
                       <div style={{ fontSize: i === 1 ? '24px' : '18px', marginBottom: '6px' }}>{emoji}</div>
-                      <Avatar profile={p} size={size} />
+                      <Avatar profile={p} size={size} center />
                       <div style={{
                         fontWeight: 700, fontSize: '11px', color: '#f0f0f5',
                         margin: '6px 0 2px', overflow: 'hidden', textOverflow: 'ellipsis',
