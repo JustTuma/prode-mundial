@@ -7,7 +7,23 @@ export function cn(...inputs: ClassValue[]) {
 
 export function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('es-AR', {
-    weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+    weekday: 'short', day: 'numeric', month: 'short',
+    hour: '2-digit', minute: '2-digit',
+    timeZone: 'America/Argentina/Buenos_Aires',
+  })
+}
+
+export function formatTime(dateStr: string) {
+  return new Date(dateStr).toLocaleTimeString('es-AR', {
+    hour: '2-digit', minute: '2-digit',
+    timeZone: 'America/Argentina/Buenos_Aires',
+  })
+}
+
+export function formatDateShort(dateStr: string) {
+  return new Date(dateStr).toLocaleDateString('es-AR', {
+    day: 'numeric', month: 'short',
+    timeZone: 'America/Argentina/Buenos_Aires',
   })
 }
 

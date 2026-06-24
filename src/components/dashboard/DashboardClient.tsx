@@ -290,7 +290,7 @@ export default function DashboardClient({ profile, upcomingMatches, recentPredic
                   <div style={{ textAlign: 'center' }}>
                     <div style={{ fontWeight: 900, fontSize: '20px', color: 'rgba(255,255,255,0.4)' }}>VS</div>
                     <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', marginTop: '4px' }}>
-                      {new Date(nextMatch.match_date).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })}
+                      {new Date(nextMatch.match_date).toLocaleDateString('es-AR', { day: 'numeric', month: 'short', timeZone: 'America/Argentina/Buenos_Aires' })}
                     </div>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>

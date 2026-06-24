@@ -110,7 +110,7 @@ export default function MatchComments({ matchId, comments: initial, reactionCoun
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'baseline', marginBottom: '2px' }}>
                   <span style={{ fontWeight: 600, fontSize: '13px', color: '#94a3b8' }}>{c.profiles?.username || 'Usuario'}</span>
                   <span style={{ color: '#374151', fontSize: '11px' }}>
-                    {new Date(c.created_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+                    {new Date(c.created_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Argentina/Buenos_Aires' })}
                   </span>
                 </div>
                 <div style={{ color: '#f0f0f5', fontSize: '14px', lineHeight: 1.4 }}>{c.content}</div>
