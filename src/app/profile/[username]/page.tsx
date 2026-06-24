@@ -240,7 +240,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
                           background: pred.is_exact ? '#f59e0b22' : pred.is_correct_result ? '#10b98122' : '#ef444422',
                           color: pred.is_exact ? '#f59e0b' : pred.is_correct_result ? '#10b981' : '#ef4444',
                         }}>
-                          {pred.is_exact ? '🎯 Exacto' : pred.is_correct_result ? '✅ Correcto' : '❌ Error'}
+                          {pred.is_exact ? '🎯 Exacto' : pred.is_correct_result ? '✅ Correcto' : '❌ Sin puntos'}
                         </span>
                         {pred.points_earned > 0 && (
                           <div style={{ color: '#f59e0b', fontWeight: 800, fontSize: '14px', marginTop: '2px' }}>

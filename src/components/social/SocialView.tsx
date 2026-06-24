@@ -42,7 +42,7 @@ function FeedCard({ item }: { item: any }) {
   const isExact = item.is_exact
   const isCorrect = item.is_correct_result
   const resultColor = isExact ? '#f59e0b' : isCorrect ? '#10b981' : '#ef4444'
-  const resultLabel = isExact ? '🎯 ¡Resultado exacto!' : isCorrect ? '✅ Resultado correcto' : '❌ Falló'
+  const resultLabel = isExact ? '🎯 ¡Resultado exacto!' : isCorrect ? '✅ Resultado correcto' : '❌ Sin puntos'
   const resultBg = isExact ? 'rgba(245,158,11,0.08)' : isCorrect ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.05)'
 
   return (
