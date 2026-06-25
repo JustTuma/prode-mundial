@@ -32,6 +32,8 @@ export default function ProfileView({ profile, rank, myPoints, myExact, earnedId
   const [username, setUsername] = useState(profile?.username || '')
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url || '')
   const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState('')
   const supabase = createClient()
   const router = useRouter()
   const earned = new Set(earnedIds)
@@ -40,6 +42,21 @@ export default function ProfileView({ profile, rank, myPoints, myExact, earnedId
     await supabase.auth.signOut()
     router.push('/')
     router.refresh()
+  }
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadError('')
+    if (file.size > 5 * 1024 * 1024) { setUploadError('La imagen es muy grande (máx 5MB)'); return }
+    setUploading(true)
+    const ext = file.name.split('.').pop() || 'jpg'
+    const path = `${profile.id}/${Date.now()}.${ext}`
+    const { error: upErr } = await supabase.storage.from('avatars').upload(path, file, { upsert: true, contentType: file.type })
+    if (upErr) { setUploadError('Error al subir: ' + upErr.message); setUploading(false); return }
+    const { data } = supabase.storage.from('avatars').getPublicUrl(path)
+    setAvatarUrl(data.publicUrl)
+    setUploading(false)
   }
 
   async function saveProfile() {
@@ -113,10 +130,32 @@ export default function ProfileView({ profile, rank, myPoints, myExact, earnedId
           Editar perfil <span style={{ color: 'var(--muted)' }}>{editOpen ? '▾' : '›'}</span>
         </button>
         {editOpen && (
-          <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--line)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--line)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {/* Foto: preview + subir desde el celular */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <div style={{ width: '64px', height: '64px', borderRadius: '50%', overflow: 'hidden', background: 'var(--grad)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontFamily: 'Anton', fontSize: '24px', flexShrink: 0 }}>
+                {avatarUrl ? <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : username?.[0]?.toUpperCase()}
+              </div>
+              <div style={{ flex: 1 }}>
+                <label style={{ display: 'block', cursor: 'pointer' }}>
+                  <span style={{ display: 'inline-block', background: 'var(--accent)', color: 'var(--accent-ink)', fontWeight: 800, fontSize: '13px', padding: '10px 16px', borderRadius: '10px', textAlign: 'center', width: '100%', fontFamily: 'Archivo' }}>
+                    {uploading ? 'Subiendo…' : '📷 Subir foto'}
+                  </span>
+                  <input type="file" accept="image/*" onChange={handleFile} disabled={uploading} style={{ display: 'none' }} />
+                </label>
+                <p style={{ color: 'var(--muted)', fontSize: '11px', margin: '6px 0 0' }}>Elegí una foto de tu celu (máx 5MB)</p>
+              </div>
+            </div>
+            {uploadError && <div style={{ color: 'var(--neg)', fontSize: '12px' }}>{uploadError}</div>}
+
             <input className="input" value={username} onChange={e => setUsername(e.target.value)} placeholder="Nombre de usuario" />
-            <input className="input" value={avatarUrl} onChange={e => setAvatarUrl(e.target.value)} placeholder="URL de tu foto" />
-            <button onClick={saveProfile} disabled={saving} className="btn-accent">{saving ? 'Guardando…' : 'Guardar cambios'}</button>
+
+            <details>
+              <summary style={{ color: 'var(--muted)', fontSize: '12px', cursor: 'pointer', fontWeight: 600 }}>O pegar el link de una imagen</summary>
+              <input className="input" style={{ marginTop: '8px' }} value={avatarUrl} onChange={e => setAvatarUrl(e.target.value)} placeholder="https://..." />
+            </details>
+
+            <button onClick={saveProfile} disabled={saving || uploading} className="btn-accent">{saving ? 'Guardando…' : 'Guardar cambios'}</button>
           </div>
         )}
         <Link href="/predict/bonus" style={{ textDecoration: 'none' }}>
