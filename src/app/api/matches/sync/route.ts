@@ -39,19 +39,31 @@ async function runSync() {
     let scoredCount = 0
     const affectedUsers = new Set<string>()
 
-    for (const match of finishedMatches) {
+    // Puntuar contra TODOS los partidos finalizados en la base de datos
+    // (no solo los que devuelve la API en esta corrida) -> auto-corrige siempre
+    const { data: dbFinished } = await supabase
+      .from('matches')
+      .select('id, home_score, away_score')
+      .eq('status', 'FINISHED')
+      .not('home_score', 'is', null)
+      .not('away_score', 'is', null)
+
+    for (const match of (dbFinished || [])) {
       const { data: preds } = await supabase.from('predictions').select('*').eq('match_id', match.id)
       if (!preds?.length) continue
       for (const pred of preds) {
         const result = calculatePoints(pred.home_score_pred, pred.away_score_pred, match.home_score!, match.away_score!)
-        await supabase.from('predictions').update({
-          points_earned: result.points,
-          is_exact: result.isExact,
-          is_correct_result: result.isCorrectResult,
-          updated_at: new Date().toISOString(),
-        }).eq('id', pred.id)
-        affectedUsers.add(pred.user_id)
-        scoredCount++
+        // Solo actualiza si cambió algo (evita escrituras inútiles)
+        if (pred.points_earned !== result.points || pred.is_exact !== result.isExact || pred.is_correct_result !== result.isCorrectResult) {
+          await supabase.from('predictions').update({
+            points_earned: result.points,
+            is_exact: result.isExact,
+            is_correct_result: result.isCorrectResult,
+            updated_at: new Date().toISOString(),
+          }).eq('id', pred.id)
+          affectedUsers.add(pred.user_id)
+          scoredCount++
+        }
       }
     }
 
