@@ -76,6 +76,10 @@ export default function ProfileView({ profile, rank, myPoints, myExact, earnedId
         </div>
         <h1 className="font-display" style={{ fontSize: '24px', color: 'var(--ink)', marginTop: '12px' }}>{profile?.full_name || profile?.username}</h1>
         <span style={{ fontSize: '13px', color: 'var(--muted)', fontWeight: 600 }}>@{profile?.username}</span>
+        <button onClick={() => { setEditOpen(true); setTimeout(() => document.getElementById('editar-perfil')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 60) }}
+          style={{ marginTop: '12px', background: 'var(--surface)', border: '1px solid var(--line)', color: 'var(--accent)', fontWeight: 800, fontSize: '13px', padding: '8px 20px', borderRadius: '999px', cursor: 'pointer', fontFamily: 'Archivo' }}>
+          ✏️ Editar perfil
+        </button>
       </div>
 
       {/* Stats grid 2x2 */}
@@ -125,7 +129,7 @@ export default function ProfileView({ profile, rank, myPoints, myExact, earnedId
       </div>
 
       {/* Ajustes */}
-      <div className="card" style={{ marginTop: '18px', borderRadius: '16px', overflow: 'hidden' }}>
+      <div id="editar-perfil" className="card" style={{ marginTop: '18px', borderRadius: '16px', overflow: 'hidden', scrollMarginTop: '80px' }}>
         <button onClick={() => setEditOpen(o => !o)} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '15px 16px', borderBottom: '1px solid var(--line)', fontSize: '14px', fontWeight: 700, color: 'var(--ink)', background: 'none', border: 'none', borderBottomWidth: '1px', borderBottomStyle: 'solid', borderBottomColor: 'var(--line)', cursor: 'pointer', fontFamily: 'Archivo' }}>
           Editar perfil <span style={{ color: 'var(--muted)' }}>{editOpen ? '▾' : '›'}</span>
         </button>
