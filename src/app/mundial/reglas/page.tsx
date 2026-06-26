@@ -87,12 +87,67 @@ export default function ReglasPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {[
             ['Fase de grupos', 'Los equipos se dividen en grupos. Cada uno juega 3 partidos. Los 2 mejores de cada grupo pasan a la siguiente ronda; el resto queda eliminado.'],
-            ['Eliminatorias', 'A partir de ahí es mata-mata: el que pierde, se va a su casa. Octavos → Cuartos → Semifinal → Final.'],
-            ['Puntos en la tabla', 'En los grupos, ganar da 3 puntos, empatar 1, perder 0. Por eso en la app ves columnas como PTS (puntos) y DG (diferencia de gol).'],
+            ['Eliminatorias', 'A partir de ahí es mata-mata: el que pierde, se va a su casa. Ronda de 32 → Octavos → Cuartos → Semifinal → Final.'],
             ['Argentina', 'La actual campeona del mundo 🇦🇷. Tenés una sección dedicada para seguirla en el hub Mundial.'],
           ].map(([t, d]) => (
             <div key={t}>
               <div style={{ fontSize: '14px', fontWeight: 800, color: 'var(--accent)' }}>{t}</div>
+              <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5 }}>{d}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Cómo funciona el Mundial (puntos del torneo) */}
+      <div className="card" style={{ padding: '18px', marginTop: '14px' }}>
+        <h2 className="font-display" style={{ fontSize: '17px', color: 'var(--ink)', marginBottom: '12px' }}>🏆 Cómo se reparten los puntos en el Mundial</h2>
+        <p style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.6, marginBottom: '12px' }}>
+          Ojo: esto es cómo suman los <b>equipos</b> en la tabla del torneo (distinto de los puntos que sumás <b>vos</b> en el prode).
+        </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {[
+            { pts: '3', color: 'var(--pos)', t: 'El equipo gana', d: 'Mete más goles que el rival.' },
+            { pts: '1', color: 'var(--accent)', t: 'Empatan', d: 'Terminan con la misma cantidad de goles. Suman 1 cada uno.' },
+            { pts: '0', color: 'var(--muted)', t: 'El equipo pierde', d: 'Mete menos goles. No suma nada.' },
+          ].map(r => (
+            <div key={r.pts} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+              <span className="font-display" style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'var(--surface2)', color: r.color, fontSize: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{r.pts}</span>
+              <div>
+                <div style={{ fontSize: '14px', fontWeight: 800, color: 'var(--ink)' }}>{r.t}</div>
+                <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5 }}>{r.d}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={{ marginTop: '14px', paddingTop: '14px', borderTop: '1px solid var(--line)' }}>
+          <div style={{ fontSize: '14px', fontWeight: 800, color: 'var(--accent)', marginBottom: '4px' }}>¿Y si quedan empatados en puntos?</div>
+          <p style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.6 }}>
+            Se desempata por <b>diferencia de gol (DG)</b>: los goles que hizo menos los que recibió. Si pusiste muchos y te hicieron pocos, tu DG es alto.
+            Si todavía siguen iguales, se mira quién metió más goles en total.
+          </p>
+        </div>
+        <div style={{ marginTop: '12px' }}>
+          <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.6 }}>
+            <b style={{ color: 'var(--ink)' }}>Las siglas de las tablas:</b><br/>
+            <b>PJ</b> = partidos jugados · <b>G</b> = ganados · <b>E</b> = empatados · <b>P</b> = perdidos · <b>DG</b> = diferencia de gol · <b>PTS</b> = puntos.
+          </div>
+        </div>
+      </div>
+
+      {/* Datos del Mundial 2026 */}
+      <div className="card" style={{ padding: '18px', marginTop: '14px' }}>
+        <h2 className="font-display" style={{ fontSize: '17px', color: 'var(--ink)', marginBottom: '12px' }}>📊 Datos del Mundial 2026</h2>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {[
+            ['🌎 Tres países', 'Por primera vez en la historia, el Mundial se juega en 3 países a la vez: Estados Unidos, Canadá y México.'],
+            ['🏟️ 16 sedes', 'Se juega en 16 estadios distintos. La final es en el MetLife Stadium (Nueva York) y el partido inaugural en el mítico Estadio Azteca (México).'],
+            ['👥 48 selecciones', 'Es el Mundial más grande de la historia: 48 equipos (antes eran 32), repartidos en 12 grupos de 4.'],
+            ['🎟️ Cómo se clasifica', 'Pasan de ronda los 2 primeros de cada grupo, más los 8 mejores terceros. En total avanzan 32 equipos a la fase de eliminación.'],
+            ['📅 104 partidos', 'En total se juegan 104 partidos, desde la fase de grupos hasta la gran final.'],
+            ['🏆 El campeón actual', 'Argentina ganó el Mundial 2022 en Qatar y llega como la selección a vencer. ¡Vamos! 🇦🇷'],
+          ].map(([t, d]) => (
+            <div key={t}>
+              <div style={{ fontSize: '14px', fontWeight: 800, color: 'var(--ink)' }}>{t}</div>
               <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5 }}>{d}</div>
             </div>
           ))}
