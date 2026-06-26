@@ -49,6 +49,36 @@ export async function fetchLiveMatches(): Promise<APIMatch[]> {
   }
 }
 
+export interface APIScorer {
+  player: { name: string }
+  team: { name: string; tla: string }
+  goals: number
+  assists: number | null
+}
+
+export async function fetchScorers(): Promise<APIScorer[]> {
+  try {
+    const data = await fetchFromAPI(`/competitions/${COMPETITION_CODE}/scorers?season=2026&limit=30`)
+    return data.scorers || []
+  } catch (e) {
+    console.error('Failed to fetch scorers:', e)
+    return []
+  }
+}
+
+export function mapScorer(s: APIScorer, i: number) {
+  return {
+    id: i + 1,
+    player_name: s.player?.name || 'Desconocido',
+    team_name: s.team?.name || null,
+    team_code: s.team?.tla || null,
+    goals: s.goals || 0,
+    assists: s.assists || 0,
+    position: i + 1,
+    updated_at: new Date().toISOString(),
+  }
+}
+
 export function mapAPIMatchToDBMatch(m: APIMatch) {
   return {
     id: m.id,

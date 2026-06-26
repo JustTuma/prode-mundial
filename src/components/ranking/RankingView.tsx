@@ -3,13 +3,15 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { personColor } from '@/lib/teams'
 
-type Tab = 'general' | 'weekly'
+type Tab = 'general' | 'weekly' | 'stats'
 
 interface Profile {
   id: string; username: string; avatar_url: string | null
   total_points: number; exact_scores: number; correct_results: number; predictions_made: number
 }
 interface WeeklyEntry { userId: string; username: string; avatar_url: string | null; points: number; exact: number }
+type StatWinner = { username: string; avatar_url: string | null; val: number } | null
+interface GroupStats { masExacto: StatWinner; masArriesgado: StatWinner; masErrado: StatWinner; masLocalista: StatWinner }
 
 function Avatar({ name, url, size, border }: { name: string; url: string | null; size: number; border?: string }) {
   return (
@@ -24,8 +26,8 @@ function Avatar({ name, url, size, border }: { name: string; url: string | null;
   )
 }
 
-export default function RankingView({ ranking, weeklyRanking, userId, weekStart }: {
-  ranking: Profile[]; weeklyRanking: WeeklyEntry[]; userId?: string; weekStart?: string
+export default function RankingView({ ranking, weeklyRanking, userId, weekStart, groupStats }: {
+  ranking: Profile[]; weeklyRanking: WeeklyEntry[]; userId?: string; weekStart?: string; groupStats?: GroupStats
 }) {
   const [tab, setTab] = useState<Tab>('general')
   const isWeek = tab === 'weekly'
@@ -60,10 +62,49 @@ export default function RankingView({ ranking, weeklyRanking, userId, weekStart 
       <div style={{ display: 'flex', gap: '6px', background: 'var(--surface2)', border: '1px solid var(--line)', borderRadius: '999px', padding: '4px' }}>
         {seg('general', 'General')}
         {seg('weekly', 'Semanal')}
+        {seg('stats', 'Stats')}
       </div>
 
+      {/* STATS DEL GRUPO */}
+      {tab === 'stats' && (
+        <div style={{ marginTop: '18px' }}>
+          {(() => {
+            const cards = [
+              { key: 'masExacto', emoji: '🎯', title: 'El más exacto', w: groupStats?.masExacto, fmt: (v: number) => `${v} exactos`, color: 'var(--accent2)' },
+              { key: 'masArriesgado', emoji: '🎲', title: 'El más arriesgado', w: groupStats?.masArriesgado, fmt: (v: number) => `${v.toFixed(1)} goles/partido`, color: 'var(--neg)' },
+              { key: 'masLocalista', emoji: '🏠', title: 'El más localista', w: groupStats?.masLocalista, fmt: (v: number) => `${Math.round(v * 100)}% gana el local`, color: 'var(--accent)' },
+              { key: 'masErrado', emoji: '🙈', title: 'El más errado', w: groupStats?.masErrado, fmt: (v: number) => `${v} pifies`, color: 'var(--muted)' },
+            ]
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <p style={{ fontSize: '12px', color: 'var(--muted)', fontWeight: 600, margin: '0 0 2px' }}>Los títulos del grupo según cómo pronostican 😄</p>
+                {cards.map(c => (
+                  <div key={c.key} className="card" style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '14px' }}>
+                    <div style={{ fontSize: '30px' }}>{c.emoji}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.5px' }}>{c.title}</div>
+                      {c.w ? (
+                        <>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                            <Avatar name={c.w.username} url={c.w.avatar_url} size={28} />
+                            <span style={{ fontSize: '16px', fontWeight: 900, color: 'var(--ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.w.username}</span>
+                          </div>
+                          <div style={{ fontSize: '12px', color: c.color, fontWeight: 700, marginTop: '2px' }}>{c.fmt(c.w.val)}</div>
+                        </>
+                      ) : (
+                        <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '4px' }}>Sin datos todavía</div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )
+          })()}
+        </div>
+      )}
+
       {/* Podio */}
-      {rows.length >= 3 && (
+      {tab !== 'stats' && rows.length >= 3 && (
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: '10px', margin: '18px 0 20px' }}>
           {podium.map((p, i) => p && (
             <Link key={p.id} href={`/profile/${p.name}`} style={{ flex: 1, textDecoration: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -78,12 +119,12 @@ export default function RankingView({ ranking, weeklyRanking, userId, weekStart 
       )}
 
       {/* Lista */}
-      {rows.length === 0 && (
+      {tab !== 'stats' && rows.length === 0 && (
         <div className="card" style={{ padding: '32px', textAlign: 'center', color: 'var(--muted)' }}>
           {isWeek ? 'Sin resultados esta semana' : 'Sé el primero en el ranking'}
         </div>
       )}
-      {rows.map(row => (
+      {tab !== 'stats' && rows.map(row => (
         <Link key={row.id} href={`/profile/${row.name}`} style={{ textDecoration: 'none' }}>
           <div style={{
             display: 'flex', alignItems: 'center', gap: '12px', padding: '12px',

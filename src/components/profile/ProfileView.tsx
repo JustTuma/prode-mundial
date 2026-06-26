@@ -24,8 +24,9 @@ const THEMES: { id: Theme; label: string; swatch: string[] }[] = [
   { id: 'noche', label: 'Noche', swatch: ['#5FB1FF', '#FFD23F', '#0B1220'] },
 ]
 
-export default function ProfileView({ profile, rank, myPoints, myExact, earnedIds }: {
+export default function ProfileView({ profile, rank, myPoints, myExact, earnedIds, records }: {
   profile: any; rank: number; myPoints: number; myExact: number; earnedIds: string[]
+  records?: { currentStreak: number; bestStreak: number; accuracy: number; played: number }
 }) {
   const { theme, setTheme } = useTheme()
   const [editOpen, setEditOpen] = useState(false)
@@ -96,6 +97,27 @@ export default function ProfileView({ profile, rank, myPoints, myExact, earnedId
           </div>
         ))}
       </div>
+
+      {/* Tus récords */}
+      {records && records.played > 0 && (
+        <>
+          <h2 className="font-display" style={{ fontSize: '19px', color: 'var(--ink)', margin: '20px 0 12px' }}>Tus récords</h2>
+          <div className="card" style={{ padding: '16px', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '10px', textAlign: 'center' }}>
+            <div>
+              <div className="font-display" style={{ fontSize: '26px', color: records.currentStreak >= 2 ? 'var(--neg)' : 'var(--ink)' }}>{records.currentStreak >= 2 ? '🔥' : ''}{records.currentStreak}</div>
+              <div style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: 700 }}>Racha actual</div>
+            </div>
+            <div>
+              <div className="font-display" style={{ fontSize: '26px', color: 'var(--accent2)' }}>{records.bestStreak}</div>
+              <div style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: 700 }}>Mejor racha</div>
+            </div>
+            <div>
+              <div className="font-display" style={{ fontSize: '26px', color: 'var(--accent)' }}>{records.accuracy}%</div>
+              <div style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: 700 }}>Acierto</div>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Logros */}
       <h2 className="font-display" style={{ fontSize: '19px', color: 'var(--ink)', margin: '20px 0 12px' }}>Logros</h2>

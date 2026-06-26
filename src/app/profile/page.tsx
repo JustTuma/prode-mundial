@@ -29,6 +29,26 @@ export default async function ProfilePage() {
   const myPoints = totals[user.id]?.points ?? 0
   const myExact = totals[user.id]?.exact ?? 0
 
+  // Récords: racha actual + mejor racha + % de acierto
+  const { data: myFinished } = await supabase
+    .from('predictions')
+    .select('is_correct_result, points_earned, matches!inner(match_date, status)')
+    .eq('user_id', user.id).eq('matches.status', 'FINISHED')
+  const ordered = (myFinished || []).sort((a: any, b: any) =>
+    new Date(a.matches.match_date).getTime() - new Date(b.matches.match_date).getTime())
+  let bestStreak = 0, run = 0, currentStreak = 0
+  for (const p of ordered) {
+    if (p.is_correct_result) { run++; bestStreak = Math.max(bestStreak, run) }
+    else run = 0
+  }
+  for (let i = ordered.length - 1; i >= 0; i--) {
+    if ((ordered[i] as any).is_correct_result) currentStreak++; else break
+  }
+  const played = ordered.length
+  const correct = ordered.filter((p: any) => p.is_correct_result).length
+  const accuracy = played > 0 ? Math.round(correct / played * 100) : 0
+  const records = { currentStreak, bestStreak, accuracy, played }
+
   return (
     <ProfileView
       profile={profile}
@@ -36,6 +56,7 @@ export default async function ProfilePage() {
       myPoints={myPoints}
       myExact={myExact}
       earnedIds={earnedIds}
+      records={records}
     />
   )
 }

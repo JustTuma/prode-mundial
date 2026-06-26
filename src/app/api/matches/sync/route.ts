@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createServerAdmin } from '@supabase/supabase-js'
-import { fetchWorldCupMatches, mapAPIMatchToDBMatch, getMockMatches } from '@/lib/football-api'
+import { fetchWorldCupMatches, mapAPIMatchToDBMatch, getMockMatches, fetchScorers, mapScorer } from '@/lib/football-api'
 import { calculatePoints } from '@/lib/utils'
 
 function getAdminClient() {
@@ -34,6 +34,17 @@ async function runSync() {
 
     const { error: matchError } = await supabase.from('matches').upsert(matches as any, { onConflict: 'id' })
     if (matchError) throw matchError
+
+    // Sincronizar goleadores (no crítico, si falla seguimos)
+    if (useAPI) {
+      try {
+        const scorers = (await fetchScorers()).map(mapScorer)
+        if (scorers.length) {
+          await supabase.from('scorers').delete().neq('id', -1)
+          await supabase.from('scorers').upsert(scorers as any, { onConflict: 'id' })
+        }
+      } catch (e) { console.error('scorers sync failed', e) }
+    }
 
     const finishedMatches = matches.filter(m => m.status === 'FINISHED' && m.home_score !== null && m.away_score !== null)
     let scoredCount = 0

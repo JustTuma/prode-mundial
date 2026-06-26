@@ -128,6 +128,21 @@ export default function DashboardClient({ profile, nextMatch, nextPredicted, liv
         </div>
       )}
 
+      {/* ACCESO: Hub Mundial */}
+      <Link href="/mundial" style={{ textDecoration: 'none' }}>
+        <div style={{ marginTop: '14px', borderRadius: '18px', padding: '16px 18px', background: 'linear-gradient(135deg,#003087,#0050c8)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', inset: 0, background: 'repeating-linear-gradient(90deg,transparent 0,transparent 18px,rgba(255,255,255,.05) 18px,rgba(255,255,255,.05) 36px)' }} />
+          <div style={{ position: 'relative' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '24px' }}>🌎</span>
+              <span className="font-display" style={{ fontSize: '18px', color: '#fff' }}>Mundial</span>
+            </div>
+            <div style={{ color: 'rgba(255,255,255,.65)', fontSize: '12px', marginTop: '2px' }}>Goleadores · hoy juegan · sedes · simulador</div>
+          </div>
+          <span style={{ position: 'relative', color: '#fff', fontSize: '20px' }}>›</span>
+        </div>
+      </Link>
+
       {/* ACCESOS: Fixture / Bracket */}
       <div style={{ marginTop: '14px', display: 'flex', gap: '12px' }}>
         <Link href="/fixture" style={{ flex: 1, textDecoration: 'none' }}>
