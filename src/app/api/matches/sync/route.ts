@@ -36,14 +36,18 @@ async function runSync() {
     if (matchError) throw matchError
 
     // Sincronizar goleadores (no crítico, si falla seguimos)
+    let scorersInfo: any = 'skipped'
     if (useAPI) {
       try {
         const scorers = (await fetchScorers()).map(mapScorer)
         if (scorers.length) {
           await supabase.from('scorers').delete().neq('id', -1)
-          await supabase.from('scorers').upsert(scorers as any, { onConflict: 'id' })
+          const { error: scErr } = await supabase.from('scorers').upsert(scorers as any, { onConflict: 'id' })
+          scorersInfo = scErr ? `error: ${scErr.message}` : `${scorers.length} cargados`
+        } else {
+          scorersInfo = 'API devolvió 0'
         }
-      } catch (e) { console.error('scorers sync failed', e) }
+      } catch (e: any) { scorersInfo = `excepción: ${e.message}` }
     }
 
     const finishedMatches = matches.filter(m => m.status === 'FINISHED' && m.home_score !== null && m.away_score !== null)
@@ -122,6 +126,7 @@ async function runSync() {
       finishedMatches: finishedMatches.length,
       predictionsScored: scoredCount,
       usersUpdated: affectedUsers.size,
+      scorers: scorersInfo,
       timestamp: new Date().toISOString(),
     })
   } catch (e: any) {
