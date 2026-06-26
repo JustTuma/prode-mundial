@@ -91,7 +91,7 @@ export default function DashboardClient({ profile, nextMatch, nextPredicted, liv
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span style={{ width: '8px', height: '8px', background: 'var(--neg)', borderRadius: '50%' }} className="animate-pulse" />
-                    <span style={{ color: 'var(--neg)', fontWeight: 800, fontSize: '11px' }}>{m.status === 'PAUSED' ? 'PAUSA' : 'EN VIVO'}{m.minute ? ` ${m.minute}'` : ''}</span>
+                    <span style={{ color: 'var(--neg)', fontWeight: 800, fontSize: '11px' }}>EN VIVO{m.minute ? ` ${m.minute}'` : ''}</span>
                   </div>
                   <span className="font-display" style={{ fontSize: '20px', color: 'var(--ink)' }}>{m.home_team} {m.home_score ?? 0}-{m.away_score ?? 0} {m.away_team}</span>
                 </div>

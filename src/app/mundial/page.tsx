@@ -48,7 +48,7 @@ export default async function MundialPage() {
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                     <span style={{ fontSize: '10px', fontWeight: 800, color: 'var(--accent)', background: 'var(--surface2)', padding: '3px 8px', borderRadius: '999px' }}>{matchLabel(m.group_name, m.stage)}</span>
                     <span style={{ fontSize: '11px', fontWeight: 700, color: live ? 'var(--neg)' : 'var(--muted)' }}>
-                      {live ? (m.status === 'PAUSED' ? 'PAUSA' : 'EN VIVO') : fin ? 'Final' : new Date(m.match_date).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Argentina/Buenos_Aires' }) + ' hs'}
+                      {live ? 'EN VIVO' : fin ? 'Final' : new Date(m.match_date).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Argentina/Buenos_Aires' }) + ' hs'}
                     </span>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: '8px' }}>

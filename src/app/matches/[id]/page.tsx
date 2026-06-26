@@ -35,7 +35,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
         {isLive && (
           <div style={{ textAlign: 'center', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
             <span style={{ width: '8px', height: '8px', background: 'var(--neg)', borderRadius: '50%' }} className="animate-pulse" />
-            <span style={{ color: 'var(--neg)', fontWeight: 800, fontSize: '14px' }}>{match.status === 'PAUSED' ? 'PAUSA' : 'EN VIVO'}{match.minute ? ` · ${match.minute}'` : ''}</span>
+            <span style={{ color: 'var(--neg)', fontWeight: 800, fontSize: '14px' }}>EN VIVO{match.minute ? ` · ${match.minute}'` : ''}</span>
           </div>
         )}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: '12px' }}>
