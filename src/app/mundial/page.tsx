@@ -25,6 +25,7 @@ export default async function MundialPage() {
     { href: '/mundial/argentina', emoji: '🇦🇷', title: 'Camino de Argentina', desc: 'Cómo viene la Scaloneta', grad: 'linear-gradient(135deg,#001a4d,#0050c8)', bd: '#5FB1FF44' },
     { href: '/mundial/simulador', emoji: '🔮', title: 'Simulador', desc: '¿Qué pasa si...?', grad: 'linear-gradient(135deg,#1a0a2e,#2d1b4e)', bd: '#a78bfa44' },
     { href: '/mundial/sedes', emoji: '🏟️', title: 'Sedes y estadios', desc: 'USA · Canadá · México', grad: 'linear-gradient(135deg,#0a1a0a,#0f2e0f)', bd: '#10b98144' },
+    { href: '/mundial/reglas', emoji: '📖', title: 'Cómo se juega', desc: 'Reglas y puntos explicados', grad: 'linear-gradient(135deg,#2a1f00,#3d2d00)', bd: '#f59e0b44' },
   ]
 
   return (

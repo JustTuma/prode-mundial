@@ -184,6 +184,9 @@ export default function ProfileView({ profile, rank, myPoints, myExact, earnedId
             <button onClick={saveProfile} disabled={saving || uploading} className="btn-accent">{saving ? 'Guardando…' : 'Guardar cambios'}</button>
           </div>
         )}
+        <Link href="/mundial/reglas" style={{ textDecoration: 'none' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '15px 16px', borderBottom: '1px solid var(--line)', fontSize: '14px', fontWeight: 700, color: 'var(--ink)' }}>Reglas del prode <span style={{ color: 'var(--muted)' }}>›</span></div>
+        </Link>
         <Link href="/predict/bonus" style={{ textDecoration: 'none' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '15px 16px', borderBottom: '1px solid var(--line)', fontSize: '14px', fontWeight: 700, color: 'var(--ink)' }}>Predicciones bonus <span style={{ color: 'var(--accent)', fontWeight: 800 }}>🌟</span></div>
         </Link>
