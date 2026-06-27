@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import TeamAvatar from '@/components/ui/TeamAvatar'
+import { SolDeMayo, FloatingBalls } from '@/components/ui/Decorations'
 import { personColor } from '@/lib/teams'
 
 interface Props {
@@ -54,18 +55,24 @@ export default function DashboardClient({ profile, nextMatch, nextPredicted, liv
   const progress = rank === 1 ? 100 : Math.max(8, Math.min(95, Math.round((myPoints / (myPoints + pointsToLeader || 1)) * 100)))
 
   return (
-    <div className="risein">
+    <div className="risein" style={{ position: 'relative' }}>
+      <FloatingBalls count={6} />
       {/* HERO */}
       <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '24px', padding: '20px', background: 'var(--grad)', boxShadow: 'var(--shadow)', color: '#fff', marginTop: '4px' }}>
-        <div style={{ position: 'absolute', right: '-34px', top: '-34px', width: '150px', height: '150px', borderRadius: '50%', background: 'rgba(255,255,255,.13)' }} />
+        {/* franjas argentinas animadas */}
+        <div className="arg-stripes" style={{ position: 'absolute', inset: 0, opacity: .5 }} />
+        {/* sol de mayo girando */}
+        <div style={{ position: 'absolute', right: '-18px', top: '-18px' }}>
+          <SolDeMayo size={110} opacity={0.16} color="#fff" />
+        </div>
         <div style={{ position: 'absolute', right: '38px', bottom: '-54px', width: '96px', height: '96px', borderRadius: '50%', background: 'rgba(255,255,255,.09)' }} />
         <div style={{ position: 'relative' }}>
           <div style={{ fontSize: '13px', fontWeight: 600, opacity: .92 }}>Hola, {profile?.username} · tu posición</div>
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: '16px', marginTop: '4px' }}>
             <div className="font-display" style={{ fontSize: '58px', lineHeight: .85 }}>#{rank || '-'}</div>
             <div style={{ paddingBottom: '8px' }}>
-              <div className="font-display" style={{ fontSize: '28px', lineHeight: 1 }}>
-                {myPoints}<span style={{ fontSize: '14px', opacity: .85, fontFamily: 'Archivo', fontWeight: 700 }}> pts</span>
+              <div className="font-display shimmer-gold" style={{ fontSize: '28px', lineHeight: 1 }}>
+                {myPoints}<span style={{ fontSize: '14px', fontFamily: 'Archivo', fontWeight: 700 }}> pts</span>
               </div>
               <div style={{ fontSize: '12px', opacity: .92, marginTop: '2px' }}>
                 {rank === 1 ? '¡Vas primero! 🏆' : pointsToLeader > 0 ? `a ${pointsToLeader} del 1°` : 'subí al podio'}

@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { FloatingBalls } from '@/components/ui/Decorations'
 
 export default async function Home() {
   const supabase = await createClient()
@@ -10,14 +11,15 @@ export default async function Home() {
   return (
     <main style={{
       minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      padding: '24px', textAlign: 'center',
+      padding: '24px', textAlign: 'center', position: 'relative', overflow: 'hidden',
       background: 'radial-gradient(130% 90% at 50% -15%,#1b2a52 0%,#0c1228 45%,#080b14 100%)',
       fontFamily: 'Archivo, sans-serif', color: '#F3F7FF',
     }}>
-      <div style={{ maxWidth: '440px', width: '100%' }}>
+      <FloatingBalls count={8} />
+      <div style={{ maxWidth: '440px', width: '100%', position: 'relative' }}>
         <div style={{ fontSize: '64px', marginBottom: '8px' }}>🏆</div>
         <div className="font-display" style={{ fontSize: '44px', letterSpacing: '1px', lineHeight: 1 }}>
-          PRODE<span style={{ color: '#5FB1FF' }}>26</span>
+          PRODE<span className="shimmer-gold">26</span>
           <span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%', background: '#FFD23F', marginLeft: '6px', verticalAlign: 'top' }} />
         </div>
         <p style={{ fontSize: '1.4rem', fontWeight: 800, margin: '12px 0 4px' }}>El prode del Mundial 2026 🇦🇷</p>
