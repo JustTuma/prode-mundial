@@ -51,6 +51,18 @@ function timeAgo(dateStr: string) {
   return `hace ${Math.floor(h / 24)}d`
 }
 
+// Minuto en vivo: usa el de la API si existe; si no, lo estima desde el inicio.
+function liveMinute(m: any): string {
+  if (m.minute) return `${m.minute}'`
+  if (m.status === 'PAUSED') return 'ET'
+  const elapsed = Math.floor((Date.now() - new Date(m.match_date).getTime()) / 60000)
+  if (elapsed < 0) return ''
+  if (elapsed <= 47) return `~${elapsed}'`        // primer tiempo (+ margen)
+  if (elapsed <= 64) return 'ET'                   // entretiempo aprox
+  const second = Math.min(90, elapsed - 15)        // descontamos ~15' de entretiempo
+  return `~${second}'`
+}
+
 export default function DashboardClient({ profile, nextMatch, nextPredicted, liveMatches, rank, myPoints, myExact, myStreak, pointsToLeader, top4, wallPosts, weeklyWinner, userId }: Props) {
   const cd = useCountdown(nextMatch?.match_date)
   const progress = rank === 1 ? 100 : Math.max(8, Math.min(95, Math.round((myPoints / (myPoints + pointsToLeader || 1)) * 100)))
@@ -100,7 +112,7 @@ export default function DashboardClient({ profile, nextMatch, nextPredicted, liv
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span style={{ width: '8px', height: '8px', background: 'var(--neg)', borderRadius: '50%' }} className="animate-pulse" />
-                    <span style={{ color: 'var(--neg)', fontWeight: 800, fontSize: '11px' }}>EN VIVO{m.minute ? ` ${m.minute}'` : ''}</span>
+                    <span style={{ color: 'var(--neg)', fontWeight: 800, fontSize: '11px' }}>EN VIVO {liveMinute(m)}</span>
                   </div>
                   <span className="font-display" style={{ fontSize: '20px', color: 'var(--ink)' }}>{m.home_team} {m.home_score ?? 0}-{m.away_score ?? 0} {m.away_team}</span>
                 </div>
