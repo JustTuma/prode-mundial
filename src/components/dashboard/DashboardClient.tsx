@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import TeamAvatar from '@/components/ui/TeamAvatar'
 import { SolDeMayo, FloatingBalls } from '@/components/ui/Decorations'
+import LiveRefresher from '@/components/ui/LiveRefresher'
 import { personColor } from '@/lib/teams'
 
 interface Props {
@@ -56,6 +57,7 @@ export default function DashboardClient({ profile, nextMatch, nextPredicted, liv
 
   return (
     <div className="risein" style={{ position: 'relative' }}>
+      {liveMatches.length > 0 && <LiveRefresher />}
       <FloatingBalls count={6} />
       {/* HERO */}
       <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '24px', padding: '20px', background: 'var(--grad)', boxShadow: 'var(--shadow)', color: '#fff', marginTop: '4px' }}>

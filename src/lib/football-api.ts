@@ -27,7 +27,7 @@ export interface APIMatch {
 async function fetchFromAPI(endpoint: string) {
   const res = await fetch(`${BASE_URL}${endpoint}`, {
     headers: { 'X-Auth-Token': API_KEY },
-    next: { revalidate: 60 }, // cache for 1 min
+    cache: 'no-store', // siempre lo más fresco que tenga la API
   })
   if (!res.ok) throw new Error(`Football API error: ${res.status}`)
   return res.json()

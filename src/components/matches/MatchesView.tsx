@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import TeamAvatar from '@/components/ui/TeamAvatar'
+import LiveRefresher from '@/components/ui/LiveRefresher'
 import { matchLabel } from '@/lib/utils'
 import type { Match, Prediction } from '@/lib/types'
 
@@ -139,6 +140,7 @@ export default function MatchesView({ matches, predictions, userId }: { matches:
 
   return (
     <div className="risein">
+      {live.length > 0 && <LiveRefresher />}
       <h1 className="font-display" style={{ fontSize: '30px', color: 'var(--ink)', margin: '6px 0 4px' }}>Partidos</h1>
       <p style={{ fontSize: '13px', color: 'var(--muted)', fontWeight: 600, marginBottom: '14px' }}>Resultado exacto: 3 pts · acertar ganador: 1 pt</p>
 
