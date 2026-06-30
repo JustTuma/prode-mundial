@@ -176,7 +176,12 @@ export default function MatchesView({ matches, predictions, userId }: { matches:
                     <TeamAvatar name={m.home_team} code={m.home_team_code} flag={m.home_team_flag} size={44} />
                     <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--ink)', textAlign: 'center' }}>{m.home_team}</span>
                   </div>
-                  <span className="font-display" style={{ fontSize: '34px', color: 'var(--ink)' }}>{m.home_score} - {m.away_score}</span>
+                  <div style={{ textAlign: 'center' }}>
+                    <span className="font-display" style={{ fontSize: '34px', color: 'var(--ink)' }}>{m.home_score} - {m.away_score}</span>
+                    {m.pen_home != null && m.pen_away != null && (
+                      <div style={{ fontSize: '10px', fontWeight: 800, color: 'var(--accent2)', marginTop: '-2px' }}>🥅 pen {m.pen_home}-{m.pen_away}</div>
+                    )}
+                  </div>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', width: '90px' }}>
                     <TeamAvatar name={m.away_team} code={m.away_team_code} flag={m.away_team_flag} size={44} />
                     <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--ink)', textAlign: 'center' }}>{m.away_team}</span>

@@ -22,6 +22,8 @@ export interface Match {
   away_team_flag: string | null
   home_score: number | null
   away_score: number | null
+  pen_home?: number | null
+  pen_away?: number | null
   status: 'SCHEDULED' | 'LIVE' | 'FINISHED' | 'POSTPONED' | 'IN_PLAY' | 'PAUSED'
   stage: string
   group_name: string | null

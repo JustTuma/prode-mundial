@@ -32,7 +32,12 @@ async function runSync() {
     const rawMatches = useAPI ? await fetchWorldCupMatches() : []
     const matches = useAPI ? rawMatches.map(mapAPIMatchToDBMatch) : getMockMatches()
 
-    const { error: matchError } = await supabase.from('matches').upsert(matches as any, { onConflict: 'id' })
+    let { error: matchError } = await supabase.from('matches').upsert(matches as any, { onConflict: 'id' })
+    // Si las columnas de penales no existen todavía, reintentar sin ellas
+    if (matchError && /pen_home|pen_away|column/i.test(matchError.message)) {
+      const stripped = (matches as any[]).map(({ pen_home, pen_away, ...rest }) => rest)
+      matchError = (await supabase.from('matches').upsert(stripped as any, { onConflict: 'id' })).error
+    }
     if (matchError) throw matchError
 
     // Sincronizar goleadores (no crítico, si falla seguimos)

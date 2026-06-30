@@ -55,6 +55,13 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
             <span style={{ fontWeight: 800, fontSize: '14px', color: 'var(--ink)', textAlign: 'center' }}>{match.away_team}</span>
           </div>
         </div>
+        {match.pen_home != null && match.pen_away != null && (
+          <div style={{ textAlign: 'center', marginTop: '10px' }}>
+            <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--accent2)', background: 'var(--surface2)', padding: '4px 12px', borderRadius: '999px' }}>
+              🥅 {(match.pen_home > match.pen_away ? match.home_team : match.away_team)} ganó por penales {Math.max(match.pen_home, match.pen_away)}-{Math.min(match.pen_home, match.pen_away)}
+            </span>
+          </div>
+        )}
         {match.city && <div style={{ textAlign: 'center', marginTop: '16px', color: 'var(--muted)', fontSize: '12px' }}>📍 {match.city}</div>}
       </div>
 

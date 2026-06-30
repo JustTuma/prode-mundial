@@ -12,8 +12,12 @@ export interface APIMatch {
   homeTeam: { id: number; name: string; shortName: string; tla: string; crest: string }
   awayTeam: { id: number; name: string; shortName: string; tla: string; crest: string }
   score: {
+    duration?: string
     fullTime: { home: number | null; away: number | null }
     halfTime: { home: number | null; away: number | null }
+    regularTime?: { home: number | null; away: number | null }
+    extraTime?: { home: number | null; away: number | null }
+    penalties?: { home: number | null; away: number | null }
   }
   venue: string | null
   referees: Array<{ name: string }>
@@ -80,6 +84,21 @@ export function mapScorer(s: APIScorer, i: number) {
 }
 
 export function mapAPIMatchToDBMatch(m: APIMatch) {
+  const s = m.score
+  const isPens = s.duration === 'PENALTY_SHOOTOUT' || (s.penalties && s.penalties.home != null)
+
+  // El resultado que cuenta para el prode = tiempo reglamentario (+ alargue),
+  // SIN penales. La API mete los penales en fullTime, así que para partidos a
+  // penales usamos regularTime + extraTime.
+  let homeScore = s.fullTime.home
+  let awayScore = s.fullTime.away
+  if (isPens) {
+    const rh = s.regularTime?.home ?? 0, eh = s.extraTime?.home ?? 0
+    const ra = s.regularTime?.away ?? 0, ea = s.extraTime?.away ?? 0
+    homeScore = rh + eh
+    awayScore = ra + ea
+  }
+
   return {
     id: m.id,
     external_id: m.id,
@@ -89,8 +108,10 @@ export function mapAPIMatchToDBMatch(m: APIMatch) {
     away_team_code: m.awayTeam.tla || 'TBD',
     home_team_flag: m.homeTeam.crest || null,
     away_team_flag: m.awayTeam.crest || null,
-    home_score: m.score.fullTime.home,
-    away_score: m.score.fullTime.away,
+    home_score: homeScore,
+    away_score: awayScore,
+    pen_home: isPens ? (s.penalties?.home ?? null) : null,
+    pen_away: isPens ? (s.penalties?.away ?? null) : null,
     status: m.status,
     stage: m.stage,
     group_name: m.group,
